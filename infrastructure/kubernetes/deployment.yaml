@@ -1,0 +1,208 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vaultguard
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultguard-backend
+  namespace: vaultguard
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: vaultguard-backend
+  template:
+    metadata:
+      labels:
+        app: vaultguard-backend
+    spec:
+      containers:
+      - name: backend
+        image: vaultguard/backend:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3001"
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: vaultguard-secrets
+              key: supabase-url
+        - name: SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: vaultguard-secrets
+              key: supabase-anon-key
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: vaultguard-secrets
+              key: supabase-service-role-key
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vaultguard-secrets
+              key: jwt-secret
+        - name: REDIS_URL
+          value: "redis://vaultguard-redis:6379"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultguard-frontend
+  namespace: vaultguard
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: vaultguard-frontend
+  template:
+    metadata:
+      labels:
+        app: vaultguard-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: vaultguard/frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultguard-redis
+  namespace: vaultguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vaultguard-redis
+  template:
+    metadata:
+      labels:
+        app: vaultguard-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultguard-backend
+  namespace: vaultguard
+spec:
+  selector:
+    app: vaultguard-backend
+  ports:
+  - port: 3001
+    targetPort: 3001
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultguard-frontend
+  namespace: vaultguard
+spec:
+  selector:
+    app: vaultguard-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultguard-redis
+  namespace: vaultguard
+spec:
+  selector:
+    app: vaultguard-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: vaultguard
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

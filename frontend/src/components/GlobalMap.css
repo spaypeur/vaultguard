@@ -1,0 +1,9 @@
+@keyframes scannerMove {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(1000%); }
+}
+
+.scanner-line {
+  animation: scannerMove 4s linear infinite;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+}

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultguard-config
+  namespace: vaultguard
+data:
+  NODE_ENV: "production"
+  API_URL: "https://api.vaultguard.app"
+  WEBSOCKET_URL: "wss://api.vaultguard.app"
+  REDIS_HOST: "vaultguard-redis"
+  REDIS_PORT: "6379"
+  LOG_LEVEL: "info"
+  METRICS_ENABLED: "true"
+  RATE_LIMIT_WINDOW: "900000"  # 15 minutes in milliseconds
+  RATE_LIMIT_MAX: "100"
+  API_KEY_ROTATION_INTERVAL: "604800"  # 7 days in seconds
+  CORS_ORIGIN: "https://vaultguard.app,https://www.vaultguard.app,https://vaultguard.io,https://www.vaultguard.io"
+  SECURITY_HEADERS_ENABLED: "true"
+  TLS_ENABLED: "true"
+  MONITORING_ENABLED: "true"
+  AUDIT_LOG_ENABLED: "true"
+  ZK_COMPLIANCE_ENABLED: "true"

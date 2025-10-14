@@ -1,0 +1,42 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: cert-manager
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@vaultguard.io
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vaultguard-tls
+  namespace: vaultguard
+spec:
+  secretName: vaultguard-tls
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  subject:
+    organizations:
+      - VaultGuard
+  dnsNames:
+  - vaultguard.app
+  - api.vaultguard.app
+  - www.vaultguard.app
+  - vaultguard.io
+  - api.vaultguard.io
+  - www.vaultguard.io
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  usages:
+    - server auth
+    - client auth

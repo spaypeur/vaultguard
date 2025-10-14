@@ -1,0 +1,24 @@
+export enum AlertSeverity {
+    CRITICAL = 'CRITICAL',
+    HIGH = 'HIGH',
+    MEDIUM = 'MEDIUM',
+    LOW = 'LOW'
+}
+
+export enum AlertStatus {
+    NEW = 'NEW',
+    INVESTIGATING = 'INVESTIGATING',
+    MITIGATING = 'MITIGATING',
+    RESOLVED = 'RESOLVED',
+    FALSE_POSITIVE = 'FALSE_POSITIVE',
+    CLOSED = 'CLOSED'
+}
+
+export enum AlertSource {
+    HAVEIBEENPWNED = 'HAVEIBEENPWNED',
+    DEHASHED = 'DEHASHED',
+    DARK_MARKET_SCANNER = 'DARK_MARKET_SCANNER',
+    TOR_NETWORK = 'TOR_NETWORK',
+    THREAT_INTEL = 'THREAT_INTEL',
+    MANUAL = 'MANUAL'
+}

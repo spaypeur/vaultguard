@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vaultguard-network-policy
+  namespace: vaultguard
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: vaultguard-frontend
+    - podSelector:
+        matchLabels:
+          app: vaultguard-backend
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: vaultguard-redis
+    - podSelector:
+        matchLabels:
+          app: vaultguard-backend

@@ -1,0 +1,272 @@
+# A string used to distinguish different Supabase projects on the same host. Defaults to the
+# working directory name when running `supabase init`.
+project_id = "vaultguard2"
+
+# The API URL of your Supabase instance.
+api_url = "http://localhost:54321"
+
+# The database URL of your Supabase instance.
+db_url = "postgresql://postgres:postgres@localhost:54322/postgres"
+
+# The URL to access your Supabase dashboard.
+studio_url = "http://localhost:54323"
+
+# The access token for your Supabase project.
+access_token = ""
+
+# The API key for your Supabase project.
+api_key = ""
+
+# The JWT secret used to sign and verify JWT tokens.
+jwt_secret = ""
+
+# The URL for the Inbucket email testing service.
+inbucket_url = "http://localhost:54324"
+
+# The service role key for your Supabase project.
+service_role_key = ""
+
+# The URL for the Supabase storage service.
+storage_api_url = "http://localhost:54321/storage/v1"
+
+# The URL for the Supabase realtime service.
+realtime_api_url = "http://localhost:54321/realtime/v1"
+
+# The URL for the Supabase rest service.
+rest_url = "http://localhost:54321/rest/v1"
+
+# The URL for the Supabase graphql service.
+graphql_url = "http://localhost:54321/graphql/v1"
+
+# The URL for the Supabase auth service.
+auth_url = "http://localhost:54321/auth/v1"
+
+# The URL for the Supabase edge functions.
+functions_api_url = "http://localhost:54321/functions/v1"
+
+# The URL for the Supabase database.
+db_shadow_url = "postgresql://postgres:postgres@localhost:54322/postgres"
+
+# The URL for the Supabase analytics service.
+analytics_api_url = "http://localhost:54321/analytics/v1"
+
+# The port for the Supabase auth service.
+auth_port = 54324
+
+# The port for the Supabase rest service.
+rest_port = 54325
+
+# The port for the Supabase graphql service.
+graphql_port = 54326
+
+# The port for the Supabase realtime service.
+realtime_port = 54327
+
+# The port for the Supabase storage service.
+storage_port = 54328
+
+# The port for the Supabase edge functions.
+functions_port = 54329
+
+# The port for the Supabase analytics service.
+analytics_port = 54330
+
+# The port for the Supabase studio.
+studio_port = 54323
+
+# The port for the Supabase API.
+api_port = 54321
+
+# The port for the Supabase database.
+db_port = 54322
+
+# The port for the Supabase Inbucket.
+inbucket_port = 54324
+
+# The port for the Supabase storage API.
+storage_api_port = 54328
+
+# The port for the Supabase realtime API.
+realtime_api_port = 54327
+
+# The port for the Supabase rest API.
+rest_api_port = 54325
+
+# The port for the Supabase graphql API.
+graphql_api_port = 54326
+
+# The port for the Supabase analytics API.
+analytics_api_port = 54330
+
+# The port for the Supabase functions API.
+functions_api_port = 54329
+
+# The port for the Supabase auth API.
+auth_api_port = 54324
+
+# The port for the Supabase studio API.
+studio_api_port = 54323
+
+# The port for the Supabase API gateway.
+api_gateway_port = 54321
+
+# The port for the Supabase database shadow.
+db_shadow_port = 54322
+
+# The port for the Supabase Inbucket API.
+inbucket_api_port = 54324
+
+# The port for the Supabase storage API shadow.
+storage_api_shadow_port = 54328
+
+# The port for the Supabase realtime API shadow.
+realtime_api_shadow_port = 54327
+
+# The port for the Supabase rest API shadow.
+rest_api_shadow_port = 54325
+
+# The port for the Supabase graphql API shadow.
+graphql_api_shadow_port = 54326
+
+# The port for the Supabase analytics API shadow.
+analytics_api_shadow_port = 54330
+
+# The port for the Supabase functions API shadow.
+functions_api_shadow_port = 54329
+
+# The port for the Supabase auth API shadow.
+auth_api_shadow_port = 54324
+
+# The port for the Supabase studio API shadow.
+studio_api_shadow_port = 54323
+
+# The port for the Supabase API gateway shadow.
+api_gateway_shadow_port = 54321
+
+# The port for the Supabase database shadow shadow.
+db_shadow_shadow_port = 54322
+
+# The port for the Supabase Inbucket API shadow.
+inbucket_api_shadow_port = 54324
+
+# The port for the Supabase storage API shadow shadow.
+storage_api_shadow_shadow_port = 54328
+
+# The port for the Supabase realtime API shadow shadow.
+realtime_api_shadow_shadow_port = 54327
+
+# The port for the Supabase rest API shadow shadow.
+rest_api_shadow_shadow_port = 54325
+
+# The port for the Supabase graphql API shadow shadow.
+graphql_api_shadow_shadow_port = 54326
+
+# The port for the Supabase analytics API shadow shadow.
+analytics_api_shadow_shadow_port = 54330
+
+# The port for the Supabase functions API shadow shadow.
+functions_api_shadow_shadow_port = 54329
+
+# The port for the Supabase auth API shadow shadow.
+auth_api_shadow_shadow_port = 54324
+
+# The port for the Supabase studio API shadow shadow.
+studio_api_shadow_shadow_port = 54323
+
+# The port for the Supabase API gateway shadow shadow.
+api_gateway_shadow_shadow_port = 54321
+
+# The port for the Supabase database shadow shadow shadow.
+db_shadow_shadow_shadow_port = 54322
+
+# The port for the Supabase Inbucket API shadow shadow.
+inbucket_api_shadow_shadow_port = 54324
+
+# The port for the Supabase storage API shadow shadow shadow.
+storage_api_shadow_shadow_shadow_port = 54328
+
+# The port for the Supabase realtime API shadow shadow shadow.
+realtime_api_shadow_shadow_shadow_port = 54327
+
+# The port for the Supabase rest API shadow shadow shadow.
+rest_api_shadow_shadow_shadow_port = 54325
+
+# The port for the Supabase graphql API shadow shadow shadow.
+graphql_api_shadow_shadow_shadow_port = 54326
+
+# The port for the Supabase analytics API shadow shadow shadow.
+analytics_api_shadow_shadow_shadow_port = 54330
+
+# The port for the Supabase functions API shadow shadow shadow.
+functions_api_shadow_shadow_shadow_port = 54329
+
+# The port for the Supabase auth API shadow shadow shadow.
+auth_api_shadow_shadow_shadow_port = 54324
+
+# The port for the Supabase studio API shadow shadow shadow.
+studio_api_shadow_shadow_shadow_port = 54323
+
+# The port for the Supabase API gateway shadow shadow shadow.
+api_gateway_shadow_shadow_shadow_port = 54321
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[storage]
+enabled = true
+port = 54328
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+jwt_secret = "super-secret-jwt-token-with-at-least-32-characters-long"
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+[realtime]
+enabled = true
+port = 54327
+
+[functions]
+enabled = true
+port = 54329
+
+[analytics]
+enabled = true
+port = 54330
+
+[edge_functions]
+enabled = true
+
+[studio.public]
+enabled = true
+
+[studio.public.anon_key]
+enabled = true
+
+[studio.public.service_key]
+enabled = true
+
+[functions]
+verify_jwt = true
