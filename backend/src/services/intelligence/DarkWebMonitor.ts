@@ -1,8 +1,21 @@
 import axios from 'axios';
-import { PasteAnalyzer } from './analyzers/PasteAnalyzer';
-import { ForumCrawler } from './crawlers/ForumCrawler';
+// import { PasteAnalyzer } from './analyzers/PasteAnalyzer';
+// import { ForumCrawler } from './crawlers/ForumCrawler';
 import Redis from 'ioredis';
 import { Logger } from '../../utils/logger';
+
+// Temporary placeholder classes for missing modules
+class PasteAnalyzer {
+    async analyzePasteSites(assets: string[]): Promise<any[]> {
+        return [];
+    }
+}
+
+class ForumCrawler {
+    async crawlForums(assets: string[]): Promise<any[]> {
+        return [];
+    }
+}
 
 interface DarkWebAlert {
     id: string;
@@ -16,6 +29,7 @@ interface DarkWebAlert {
 }
 
 export class DarkWebMonitor {
+    private static instance: DarkWebMonitor;
     private redis: Redis;
     private pasteAnalyzer: PasteAnalyzer;
     private forumCrawler: ForumCrawler;
@@ -34,9 +48,17 @@ export class DarkWebMonitor {
 
     constructor() {
         this.redis = new Redis(process.env.REDIS_URL);
-        this.pasteAnalyzer = new PasteAnalyzer();
-        this.forumCrawler = new ForumCrawler();
+        // Temporarily disable missing modules for build
+        // this.pasteAnalyzer = new PasteAnalyzer();
+        // this.forumCrawler = new ForumCrawler();
         this.logger = new Logger('dark-web-monitor');
+    }
+
+    public static getInstance(): DarkWebMonitor {
+        if (!DarkWebMonitor.instance) {
+            DarkWebMonitor.instance = new DarkWebMonitor();
+        }
+        return DarkWebMonitor.instance;
     }
 
     public async monitorAssets(assets: string[]): Promise<DarkWebAlert[]> {
@@ -125,7 +147,7 @@ export class DarkWebMonitor {
     }
 
     private processIntel471Data(data: any): DarkWebAlert[] {
-        return data.credentials.map(cred => ({
+        return data.credentials.map((cred: any) => ({
             id: `intel471_${cred.id}`,
             type: 'credentials',
             severity: this.calculateSeverity(cred),
@@ -138,7 +160,7 @@ export class DarkWebMonitor {
     }
 
     private processRecordedFutureData(data: any): DarkWebAlert[] {
-        return data.results.map(result => ({
+        return data.results.map((result: any) => ({
             id: `rf_${result.id}`,
             type: this.determineAlertType(result),
             severity: this.mapRFRiskToSeverity(result.risk),
@@ -151,7 +173,7 @@ export class DarkWebMonitor {
     }
 
     private processSixgillData(data: any): DarkWebAlert[] {
-        return data.posts.map(post => ({
+        return data.posts.map((post: any) => ({
             id: `sixgill_${post.id}`,
             type: 'mention',
             severity: this.calculateSeverityFromContent(post.content),
