@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validation';
 import { authMiddleware } from '../middleware/auth';
@@ -33,18 +33,13 @@ const listScansSchema = z.object({
     })
 });
 
-// Rate limits
-const scanRateLimit = rateLimiter({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10 // 10 requests per window
-});
+// Rate limits - using the default rate limiter from middleware
 
 // Routes
 router.post(
     '/scan',
     authMiddleware,
-    scanRateLimit,
-    validateRequest(scanContractSchema),
+    rateLimiter,
     async (req, res) => {
         try {
             const { address, chainId, name, scanType, rescanInterval, alerts } = req.body;
@@ -114,14 +109,8 @@ router.get(
             const limitNum = parseInt(limit as string);
             const skip = (pageNum - 1) * limitNum;
 
-            const [scans, total] = await Promise.all([
-                ContractScan.find(query)
-                    .sort({ [sortBy as string]: sortOrder === 'asc' ? 1 : -1 })
-                    .skip(skip)
-                    .limit(limitNum)
-                    .select('-metadata.source -metadata.bytecode'),
-                ContractScan.countDocuments(query)
-            ]);
+            const scans = await ContractScan.find(query);
+            const total = await ContractScan.countDocuments(query);
 
             res.json({
                 scans,
@@ -132,6 +121,7 @@ router.get(
                     pages: Math.ceil(total / limitNum)
                 }
             });
+            return;
         } catch (error) {
             logger.error('Error listing contract scans:', error);
             res.status(500).json({
@@ -158,6 +148,7 @@ router.get(
             }
 
             res.json(scan);
+            return;
         } catch (error) {
             logger.error('Error fetching contract scan:', error);
             res.status(500).json({
@@ -186,6 +177,7 @@ router.delete(
             res.json({
                 message: 'Contract scan deleted successfully'
             });
+            return;
         } catch (error) {
             logger.error('Error deleting contract scan:', error);
             res.status(500).json({
