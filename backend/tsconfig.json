@@ -4,7 +4,7 @@
     "module": "commonjs",
     "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -40,21 +40,12 @@
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "tests",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "src/security/**/*",
-    "src/routes/darkWeb.ts",
-    "src/routes/payments.ts",
-    "src/routes/security.ts",
-    "src/services/base/**/*",
-    "src/utils/torManager.ts",
-    "src/services/intelligence/**/*"
+    "dist"
   ],
   "ts-node": {
     "esm": false,
