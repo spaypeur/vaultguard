@@ -63,7 +63,7 @@ router.post('/tax-report/create-session', async (req: AuthenticatedRequest, res:
         sessionId: session?.id,
         url: session?.url,
         product: TAX_REPORT_PRODUCT,
-        wallets: paymentMethod === 'crypto' ? PAYMENT_WALLETS : null,
+        wallets: paymentMethod === 'crypto' ? getPaymentWallets() : null,
       },
       message: 'Tax report payment session created',
     });
@@ -164,17 +164,17 @@ if (!STRIPE_SECRET_KEY) {
 // Initialize Stripe
 const stripeClient = new stripe(STRIPE_SECRET_KEY);
 
-// 🔐 SECURE WALLET ADDRESSES - Owner Verified
+// 🔐 SECURE WALLET ADDRESSES - Environment Variables Only
 // All client crypto payments will be sent to these addresses
-const PAYMENT_WALLETS = {
-  BTC: 'bc1qshs529g7r3uhfvr4uf68yj9l243nnkz8082ve7', // Bitcoin (bech32 format)
-  ETH: '0x6f3d73eadffad9ad3f8cb04d133282de95d6c3cd', // Ethereum (ERC20 compatible)
-  USDT_ERC20: '0x6f3d73eadffad9ad3f8cb04d133282de95d6c3cd', // USDT ERC20 (same as ETH)
-  USDT_TRC20: 'TA7LQSsqimN18hiwoeTZnymcDS4kUeNCT8', // TRC20 USDT - Your TRON wallet
-  SOL: 'BHdJyRkTkxVRCqKWi8oKbcD2ijKFwXYeH1ZfogLcXxLb', // Solana (base58 format)
-  ADA: 'addr1q9de789ay5ygnhqfd5g9pnadnasm2wpwrqe6sh0jh64y50wdrcr7nywn3t7sy0fh66uf2wftz4lwc303su8t03wzh2yqhqwn5u', // Cardano
-  DOT: '0x93812EE085718eC2ae1cF33921020e9CE9E3f2dC', // Polkadot (hex format)
-};
+const getPaymentWallets = () => ({
+  BTC: process.env.PAYMENT_WALLET_BTC || '',
+  ETH: process.env.PAYMENT_WALLET_ETH || '',
+  USDT_ERC20: process.env.PAYMENT_WALLET_ETH || '', // Same as ETH wallet for ERC20
+  USDT_TRC20: process.env.PAYMENT_WALLET_TRC20 || 'TA7LQSsqimN18hiwoeTZnymcDS4kUeNCT8', // TRC20 USDT - Your TRON wallet
+  SOL: process.env.PAYMENT_WALLET_SOL || '',
+  ADA: process.env.PAYMENT_WALLET_ADA || '',
+  DOT: process.env.PAYMENT_WALLET_DOT || '',
+});
 
 // ✅ WALLET STATUS: ALL ACTIVE
 // - BTC: ✅ Active (Client's wallet)
@@ -212,16 +212,19 @@ const PRICING_PLANS = {
   },
 };
 
-// Supported cryptocurrencies for payment
-const SUPPORTED_CRYPTO = [
-  { code: 'BTC', name: 'Bitcoin', symbol: '₿', wallet: PAYMENT_WALLETS.BTC },
-  { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', wallet: PAYMENT_WALLETS.ETH },
-  { code: 'USDT_ERC20', name: 'Tether (ERC20)', symbol: '₮', wallet: PAYMENT_WALLETS.USDT_ERC20 },
-  { code: 'USDT_TRC20', name: 'Tether (TRC20)', symbol: '₮', wallet: PAYMENT_WALLETS.USDT_TRC20 },
-  { code: 'SOL', name: 'Solana', symbol: '◎', wallet: PAYMENT_WALLETS.SOL },
-  { code: 'ADA', name: 'Cardano', symbol: '₳', wallet: PAYMENT_WALLETS.ADA },
-  { code: 'DOT', name: 'Polkadot', symbol: '●', wallet: PAYMENT_WALLETS.DOT },
-];
+// Supported cryptocurrencies for payment (loaded dynamically for security)
+const getSupportedCrypto = () => {
+  const wallets = getPaymentWallets();
+  return [
+    { code: 'BTC', name: 'Bitcoin', symbol: '₿', wallet: wallets.BTC },
+    { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', wallet: wallets.ETH },
+    { code: 'USDT_ERC20', name: 'Tether (ERC20)', symbol: '₮', wallet: wallets.USDT_ERC20 },
+    { code: 'USDT_TRC20', name: 'Tether (TRC20)', symbol: '₮', wallet: wallets.USDT_TRC20 },
+    { code: 'SOL', name: 'Solana', symbol: '◎', wallet: wallets.SOL },
+    { code: 'ADA', name: 'Cardano', symbol: '₳', wallet: wallets.ADA },
+    { code: 'DOT', name: 'Polkadot', symbol: '●', wallet: wallets.DOT },
+  ];
+};
 
 // Get pricing plans
 router.get('/plans', async (req: Request, res: Response): Promise<void> => {
@@ -331,7 +334,7 @@ router.post('/create-session', async (req: AuthenticatedRequest, res: Response):
         sessionId: session?.id,
         url: session?.url,
         plan,
-        wallets: paymentMethod === 'crypto' ? PAYMENT_WALLETS : null,
+        wallets: paymentMethod === 'crypto' ? getPaymentWallets() : null,
       },
       message: 'Payment session created successfully',
     } as ApiResponse);
@@ -429,7 +432,8 @@ router.post('/verify-crypto', async (req: AuthenticatedRequest, res: Response): 
     }
 
     // Validate cryptocurrency is supported
-    if (!PAYMENT_WALLETS[cryptocurrency as keyof typeof PAYMENT_WALLETS]) {
+    const wallets = getPaymentWallets();
+    if (!wallets[cryptocurrency as keyof typeof wallets]) {
       res.status(400).json({
         success: false,
         error: `Unsupported cryptocurrency: ${cryptocurrency}`,
@@ -459,7 +463,7 @@ router.post('/verify-crypto', async (req: AuthenticatedRequest, res: Response): 
       cryptocurrency,
       expectedAmount,
       transactionHash: transactionId,
-      walletAddress: PAYMENT_WALLETS[cryptocurrency as keyof typeof PAYMENT_WALLETS],
+      walletAddress: wallets[cryptocurrency as keyof typeof wallets],
       paymentId,
     };
 
@@ -763,7 +767,7 @@ router.get('/info', async (req: Request, res: Response): Promise<void> => {
     res.json({
       success: true,
       data: {
-        supportedCrypto: SUPPORTED_CRYPTO,
+        supportedCrypto: getSupportedCrypto(),
         pricingPlans: PRICING_PLANS,
         paymentMethods: ['stripe', 'crypto'],
         supportEmail: 'payments@vaultguard.io',

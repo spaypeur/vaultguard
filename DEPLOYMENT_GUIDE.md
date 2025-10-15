@@ -1,5 +1,32 @@
 # VaultGuard Deployment Guide
 
+## Step 0: Create GitHub Repository (REQUIRED)
+
+### 0.1 Create New Repository
+1. Go to: https://github.com/new
+2. Repository name: `vaultguard`
+3. Description: `Enterprise-grade crypto security and recovery platform with advanced threat monitoring`
+4. Choose: **Public** (for visibility) or **Private** (if preferred)
+5. **DO NOT** initialize with README (you already have one)
+6. Click "Create repository"
+
+### 0.2 Connect Local Repository
+After creating the GitHub repository, you'll get a URL like: `https://github.com/yourusername/vaultguard.git`
+
+Update your local repository remote (replace YOUR_USERNAME):
+```bash
+git remote set-url origin https://github.com/YOUR_USERNAME/vaultguard.git
+```
+
+### 0.3 Push to GitHub
+```bash
+git push origin main
+```
+
+**Note**: Railway will automatically detect your GitHub repository and set up deployment once you connect it in Step 2.2.
+
+---
+
 ## Quick Start (Free Hosting)
 
 ### Prerequisites

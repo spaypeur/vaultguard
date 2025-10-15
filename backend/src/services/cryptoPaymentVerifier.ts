@@ -88,15 +88,17 @@ export class CryptoPaymentVerifier {
     },
   };
 
-  // Payment wallets (same as in payments.ts)
-  private paymentWallets: Record<string, string> = {
-    BTC: 'bc1qshs529g7r3uhfvr4uf68yj9l243nnkz8082ve7',
-    ETH: '0x6f3d73eadffad9ad3f8cb04d133282de95d6c3cd',
-    USDT_ERC20: '0x6f3d73eadffad9ad3f8cb04d133282de95d6c3cd',
-    SOL: 'BHdJyRkTkxVRCqKWi8oKbcD2ijKFwXYeH1ZfogLcXxLb',
-    ADA: 'addr1q9de789ay5ygnhqfd5g9pnadnasm2wpwrqe6sh0jh64y50wdrcr7nywn3t7sy0fh66uf2wftz4lwc303su8t03wzh2yqhqwn5u',
-    DOT: '0x93812EE085718eC2ae1cF33921020e9CE9E3f2dC',
-  };
+  // Payment wallets - loaded from environment variables for security
+  private get paymentWallets(): Record<string, string> {
+    return {
+      BTC: process.env.PAYMENT_WALLET_BTC || '',
+      ETH: process.env.PAYMENT_WALLET_ETH || '',
+      USDT_ERC20: process.env.PAYMENT_WALLET_ETH || '', // Same as ETH wallet for ERC20
+      SOL: process.env.PAYMENT_WALLET_SOL || '',
+      ADA: process.env.PAYMENT_WALLET_ADA || '',
+      DOT: process.env.PAYMENT_WALLET_DOT || '',
+    };
+  }
 
   // Minimum confirmations required for each chain
   private minConfirmations: Record<string, number> = {

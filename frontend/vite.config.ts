@@ -99,7 +99,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: process.env.NODE_ENV === 'production' ? '/vaultguard2/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/' : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
