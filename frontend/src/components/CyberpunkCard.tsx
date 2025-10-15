@@ -5,13 +5,15 @@ interface CyberpunkCardProps {
   className?: string;
   glowColor?: 'cyan' | 'purple' | 'orange' | 'green' | 'red' | 'blue' | 'yellow';
   variant?: 'default' | 'glass' | 'solid';
+  onClick?: () => void;
 }
 
-export default function CyberpunkCard({ 
-  children, 
-  className = '', 
+export default function CyberpunkCard({
+  children,
+  className = '',
   glowColor = 'cyan',
-  variant = 'default'
+  variant = 'default',
+  onClick
 }: CyberpunkCardProps) {
   const glowColors = {
     cyan: 'shadow-cyan-500/20 border-cyan-500/30 hover:border-cyan-500/50',
@@ -30,12 +32,14 @@ export default function CyberpunkCard({
   };
 
   return (
-    <div 
+    <div
+      onClick={onClick}
       className={`
-        relative rounded-lg border-2 p-6 
-        transition-all duration-300 
-        ${glowColors[glowColor]} 
+        relative rounded-lg border-2 p-6
+        transition-all duration-300
+        ${glowColors[glowColor]}
         ${variants[variant]}
+        ${onClick ? 'cursor-pointer' : ''}
         ${className}
         group
       `}
