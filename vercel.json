@@ -5,16 +5,5 @@
   "devCommand": "cd frontend && npm run dev",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
-  "regions": ["iad1"],
-  "functions": {
-    "frontend/dist/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/dist/index.html"
-    }
-  ]
+  "regions": ["iad1"]
 }
