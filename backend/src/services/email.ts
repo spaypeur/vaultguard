@@ -129,6 +129,54 @@ export class EmailService {
       priority: 'high'
     });
   }
+
+  public async sendVerificationEmail(email: string, verificationUrl: string, firstName?: string): Promise<boolean> {
+    const subject = 'VaultGuard Email Verification';
+    const greeting = firstName ? `Hello ${firstName},` : 'Hello,';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333; text-align: center;">Welcome to VaultGuard</h2>
+        <p>${greeting}</p>
+        <p>Thank you for registering with VaultGuard! To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
+        </div>
+        <p>If you did not create an account with VaultGuard, please ignore this email.</p>
+        <p>For security reasons, this verification link will expire in 24 hours.</p>
+        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          This is an automated message from VaultGuard. Please do not reply to this email.
+        </p>
+      </div>
+    `;
+
+    const text = `
+      Welcome to VaultGuard
+
+      ${greeting}
+
+      Thank you for registering with VaultGuard! To complete your registration and activate your account, please verify your email address by visiting this link:
+
+      ${verificationUrl}
+
+      If you did not create an account with VaultGuard, please ignore this email.
+
+      For security reasons, this verification link will expire in 24 hours.
+
+      This is an automated message from VaultGuard. Please do not reply to this email.
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+      text,
+      priority: 'high'
+    });
+  }
 }
 
 export default EmailService;

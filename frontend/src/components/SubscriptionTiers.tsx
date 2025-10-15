@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   CheckIcon,
   XMarkIcon,
@@ -13,8 +14,11 @@ import {
   BellIcon,
   ArrowRightIcon,
   ExclamationTriangleIcon,
+  CreditCardIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../stores/authStore';
+import { paymentAPI } from '../services/api';
 
 interface SubscriptionTiersProps {
   currentPlan?: string;
@@ -23,6 +27,11 @@ interface SubscriptionTiersProps {
 const SubscriptionTiers: React.FC<SubscriptionTiersProps> = ({ currentPlan = 'free' }) => {
   const { user } = useAuthStore();
   const [showComparison, setShowComparison] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null);
+  const [supportedCrypto, setSupportedCrypto] = useState<any[]>([]);
+  const [isLoadingPaymentInfo, setIsLoadingPaymentInfo] = useState(true);
 
   // Mock usage data - in real app, this would come from API
   const usageData = {
@@ -98,6 +107,89 @@ const SubscriptionTiers: React.FC<SubscriptionTiersProps> = ({ currentPlan = 'fr
   ];
 
   const currentTier = tiers.find(tier => tier.name.toLowerCase() === currentPlan) || tiers[0];
+
+  // Load payment information on component mount
+  useEffect(() => {
+    const loadPaymentInfo = async () => {
+      try {
+        setIsLoadingPaymentInfo(true);
+        const paymentInfo = await paymentAPI.getPaymentInfo();
+        if (paymentInfo.success) {
+          setSupportedCrypto(paymentInfo.data.supportedCrypto || []);
+        }
+      } catch (error) {
+        console.error('Failed to load payment info:', error);
+      } finally {
+        setIsLoadingPaymentInfo(false);
+      }
+    };
+
+    if (user) {
+      loadPaymentInfo();
+    }
+  }, [user]);
+
+  // Handle payment processing
+  const handlePayment = async (planId: string, paymentMethod: 'btcpay' | 'stripe' = 'btcpay') => {
+    if (!user) {
+      setPaymentError('Please log in to make a payment');
+      return;
+    }
+
+    try {
+      setIsProcessingPayment(planId);
+      setPaymentError(null);
+      setPaymentSuccess(null);
+
+      const response = await paymentAPI.createPaymentSession(planId, paymentMethod);
+
+      if (response.success) {
+        // Show success toast
+        toast.success('Redirecting to payment...');
+
+        // Redirect to BTCPay Server checkout
+        if (response.data.url) {
+          setTimeout(() => {
+            window.location.href = response.data.url;
+          }, 1500); // Give user time to see the toast
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } else {
+        throw new Error(response.error || 'Failed to create payment session');
+      }
+    } catch (error: any) {
+      console.error('Payment error:', error);
+
+      const errorMessage = error.message || 'Failed to process payment. Please try again.';
+      setPaymentError(errorMessage);
+
+      // Show error toast
+      toast.error(errorMessage);
+
+      // Show specific error messages for common issues
+      if (error.message?.includes('network') || error.message?.includes('timeout')) {
+        toast('Please check your internet connection and try again.', {
+          icon: '🌐',
+          duration: 4000,
+        });
+      } else if (error.message?.includes('unauthorized') || error.message?.includes('login')) {
+        toast('Please log in to make a payment.', {
+          icon: '🔐',
+          duration: 4000,
+        });
+      }
+    } finally {
+      setIsProcessingPayment(null);
+    }
+  };
+
+  // Handle subscription renewal/upgrade
+  const handleSubscriptionAction = async (targetPlan: string) => {
+    if (currentPlan === 'free' || targetPlan !== currentPlan) {
+      await handlePayment(targetPlan.toLowerCase());
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -273,13 +365,91 @@ const SubscriptionTiers: React.FC<SubscriptionTiersProps> = ({ currentPlan = 'fr
               : 'Unlock advanced features and higher limits with a premium plan.'
             }
           </p>
-          <div className="flex gap-3 justify-center">
-            <button className="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-colors">
-              {daysUntilExpiry <= 7 ? 'Renew Now' : 'Upgrade Plan'}
-            </button>
-            <button className="border border-purple-300 text-purple-100 px-6 py-3 rounded-lg font-semibold hover:bg-purple-500/20 transition-colors">
-              Compare Plans
-            </button>
+          <div className="space-y-4">
+            {/* Payment Error Display */}
+            {paymentError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-500/10 border border-red-500/20 rounded-lg p-3"
+              >
+                <div className="flex items-center gap-2 text-red-400">
+                  <ExclamationTriangleIcon className="w-4 h-4" />
+                  <span className="text-sm">{paymentError}</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Payment Success Display */}
+            {paymentSuccess && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-green-500/10 border border-green-500/20 rounded-lg p-3"
+              >
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckIcon className="w-4 h-4" />
+                  <span className="text-sm">{paymentSuccess}</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Payment Methods Info */}
+            {!isLoadingPaymentInfo && supportedCrypto.length > 0 && (
+              <div className="bg-gray-800/50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CurrencyDollarIcon className="w-4 h-4 text-cyan-400" />
+                  <span className="text-sm font-medium text-gray-300">Payment Methods</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {supportedCrypto.slice(0, 4).map((crypto) => (
+                    <div key={crypto.code} className="flex items-center gap-2 text-xs text-gray-400">
+                      <span>{crypto.symbol}</span>
+                      <span>{crypto.name}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Powered by BTCPay Server - Pay with Bitcoin, Ethereum, and more
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => handleSubscriptionAction(currentPlan !== 'sovereign' ? 'guardian' : 'sovereign')}
+                disabled={isProcessingPayment !== null || !user}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+                  isProcessingPayment
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:from-cyan-600 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                }`}
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCardIcon className="w-4 h-4" />
+                    {daysUntilExpiry <= 7 ? 'Renew Now' : 'Upgrade Plan'}
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowComparison(!showComparison)}
+                className="border border-purple-300 text-purple-100 px-6 py-3 rounded-lg font-semibold hover:bg-purple-500/20 transition-colors"
+              >
+                Compare Plans
+              </button>
+            </div>
+
+            {!user && (
+              <p className="text-xs text-gray-500 text-center">
+                Please log in to make payments
+              </p>
+            )}
           </div>
         </motion.div>
       )}

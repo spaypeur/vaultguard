@@ -24,6 +24,13 @@ export class DarkWebMonitor {
     private readonly INTEL_X_API_KEY = process.env.INTEL_X_API_KEY;
     private readonly RECORDED_FUTURE_TOKEN = process.env.RECORDED_FUTURE_TOKEN;
     private readonly SIXGILL_API_KEY = process.env.SIXGILL_API_KEY;
+    
+    // Security API Keys
+    private readonly OSINTCAT_API_KEY = process.env.OSINTCAT_API_KEY;
+    private readonly VIRUSTOTAL_API_KEY = process.env.VIRUSTOTAL_API_KEY;
+    private readonly ABUSEIP_API_KEY = process.env.ABUSEIP_API_KEY;
+    private readonly CENSYS_API_KEY = process.env.CENSYS_API_KEY;
+    private readonly NEUTRINO_API_KEY = process.env.NEUTRINO_API_KEY_PRODUCTION;
 
     constructor() {
         this.redis = new Redis(process.env.REDIS_URL);

@@ -99,7 +99,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: process.env.NODE_ENV === 'production' ? '/' : '/',
+  base: process.env.NODE_ENV === 'production' ? './' : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -120,15 +120,62 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV === 'production' ? false : true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['recharts'],
-          ui: ['@headlessui/react', '@heroicons/react'],
+          // React ecosystem
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // UI libraries
+          'ui-vendor': ['@headlessui/react', '@heroicons/react', 'lucide-react'],
+          // Charts and visualization
+          'charts-vendor': ['recharts', 'framer-motion'],
+          // 3D and animation libraries
+          'graphics-vendor': ['@react-three/fiber', '@react-three/drei', 'three', 'gsap'],
+          // Form and utility libraries
+          'utils-vendor': ['axios', 'clsx', 'date-fns', 'tailwind-merge', 'zustand'],
+          // Ant Design ecosystem
+          'antd-vendor': ['antd', '@ant-design/icons', '@ant-design/pro-layout'],
+          // Socket and real-time
+          'socket-vendor': ['socket.io-client'],
+        },
+        // Optimize chunk naming for better caching
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '')
+            : 'chunk';
+          return `assets/js/${facadeModuleId}-[hash].js`;
+        },
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name?.split('.') ?? [];
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/images/[name]-[hash].${ext}`;
+          }
+          if (/css/i.test(ext)) {
+            return `assets/css/[name]-[hash].${ext}`;
+          }
+          if (/woff2?|eot|ttf|otf/i.test(ext)) {
+            return `assets/fonts/[name]-[hash].${ext}`;
+          }
+          return `assets/[name]-[hash].${ext}`;
         },
       },
     },
+    // Increase chunk size warning limit for better performance
+    chunkSizeWarningLimit: 1000,
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Target modern browsers for better performance
+    target: 'esnext',
+    // Reduce CSS size
+    cssMinify: true,
   },
 });

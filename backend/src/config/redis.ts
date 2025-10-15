@@ -20,7 +20,7 @@ const config: RedisConfig = {
     redis: {
         host: process.env.REDIS_HOST || 'redis.cloud.vaultguard.io',
         port: parseInt(process.env.REDIS_PORT || '6380'),
-        password: process.env.REDIS_PASSWORD || 'A3zv0p8z0fswbdvjjq748c3u3glcokpw5mx9ac0bclau3snhoi3',
+        password: process.env.REDIS_PASSWORD,
         tls: true, // Always use TLS in production
         retryStrategy: (times: number) => Math.min(times * 50, 2000), // Exponential backoff
         enableReadyCheck: true,

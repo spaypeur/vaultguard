@@ -21,6 +21,9 @@ import TaxReportsLanding from './pages/TaxReportsLanding';
 import RecoveryIntake from './pages/RecoveryIntake';
 import SecurityAudits from './pages/SecurityAudits';
 import ExpertRecovery from './pages/ExpertRecovery';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
+import EmailVerification from './pages/EmailVerification';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -54,6 +57,9 @@ function App() {
       <Route path="/blog" element={<Blog />} />
       <Route path="/login" element={<VaultLogin />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email/:token" element={<EmailVerification />} />
+      <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route path="/payment/cancel" element={<PaymentCancel />} />
 
       <Route path="/scan" element={
         <PrivateRoute>

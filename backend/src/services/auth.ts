@@ -105,6 +105,20 @@ export class AuthService {
       const accessToken = this.generateAccessToken(user);
       const refreshToken = this.generateRefreshToken(user);
 
+      // Send verification email
+      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${emailVerificationToken}`;
+      const emailSent = await EmailService.getInstance().sendVerificationEmail(
+        userData.email,
+        verificationUrl,
+        userData.firstName
+      );
+
+      if (!emailSent) {
+        AuthService.logger.warn(`Failed to send verification email to ${userData.email}, but user registration completed`);
+      } else {
+        AuthService.logger.info(`Verification email sent to ${userData.email}`);
+      }
+
       // Skip audit logging to avoid database issues during registration
 
       return { user, accessToken, refreshToken };

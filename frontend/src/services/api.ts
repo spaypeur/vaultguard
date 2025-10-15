@@ -2,12 +2,13 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.VITE_ENVIRONMENT === 'production' ? '/api' : 'http://localhost:3001/api'),
   headers: {
     'Content-Type': 'application/json',
     'Origin': window.location.origin,
   },
   withCredentials: true,
+  timeout: 10000, // 10 second timeout to prevent hanging
 });
 
 // Function to get the current access token from Zustand store only
@@ -148,6 +149,59 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Payment API
+export const paymentAPI = {
+  // Get payment information
+  getPaymentInfo: async () => {
+    const response = await api.get('/payments/info');
+    return response.data;
+  },
+
+  // Get pricing plans
+  getPlans: async () => {
+    const response = await api.get('/payments/plans');
+    return response.data;
+  },
+
+  // Create payment session
+  createPaymentSession: async (planId: string, paymentMethod: 'btcpay' | 'stripe' = 'btcpay') => {
+    const response = await api.post('/payments/create-session', {
+      planId,
+      paymentMethod
+    });
+    return response.data;
+  },
+
+  // Get subscription status
+  getSubscription: async () => {
+    const response = await api.get('/payments/subscription');
+    return response.data;
+  },
+
+  // Get payment history
+  getPaymentHistory: async () => {
+    const response = await api.get('/payments/history');
+    return response.data;
+  },
+
+  // Verify crypto payment (for manual verification if needed)
+  verifyCryptoPayment: async (planId: string, cryptocurrency: string, transactionId: string, amount: string) => {
+    const response = await api.post('/payments/verify-crypto', {
+      planId,
+      cryptocurrency,
+      transactionId,
+      amount
+    });
+    return response.data;
+  },
+
+  // Get crypto payment status
+  getCryptoPaymentStatus: async (paymentId: string) => {
+    const response = await api.get(`/payments/crypto-status/${paymentId}`);
+    return response.data;
+  }
+};
 
 // Lead Magnets API
 export const leadMagnetsAPI = {

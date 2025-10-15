@@ -22,6 +22,7 @@ interface AuthState {
   login: (code: string) => Promise<void>;
   setAuth: (user: User, accessToken: string, refreshToken?: string) => void;
   updateTokens: (accessToken: string, refreshToken?: string) => void;
+  refreshUser: () => Promise<void>;
   logout: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -80,6 +81,29 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: refreshToken || currentState.refreshToken,
           isLoading: false
         });
+      },
+
+      refreshUser: async () => {
+        try {
+          const currentState = get();
+          if (!currentState.isAuthenticated || !currentState.accessToken) {
+            return;
+          }
+
+          const { data } = await api.get('/user/me');
+          if (data.success) {
+            set({
+              user: data.data,
+              isLoading: false
+            });
+          }
+        } catch (error: any) {
+          console.error('Failed to refresh user data:', error);
+          // If refresh fails due to auth issues, logout
+          if (error.response?.status === 401) {
+            get().logout();
+          }
+        }
       },
 
       logout: () => {

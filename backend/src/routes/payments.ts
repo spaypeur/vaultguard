@@ -3,6 +3,8 @@ import { AuthenticatedRequest, ApiResponse } from '@/types';
 import stripe from 'stripe';
 import DatabaseService from '@/services/database';
 import { Logger } from '@/utils/logger';
+import BTCPayServerService from '@/services/btcpayServer';
+import BTCPayWebhooks from '@/services/btcpayWebhooks';
 
 const router = Router();
 const logger = new Logger('payments');
@@ -11,12 +13,23 @@ const logger = new Logger('payments');
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
-if (!STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+// Initialize Stripe (optional - for backward compatibility)
+let stripeClient: stripe | null = null;
+if (STRIPE_SECRET_KEY) {
+  stripeClient = new stripe(STRIPE_SECRET_KEY);
 }
 
-// Initialize Stripe
-const stripeClient = new stripe(STRIPE_SECRET_KEY);
+// Initialize BTCPay Server (optional)
+let btcpayService: BTCPayServerService | null = null;
+let btcpayWebhooks: BTCPayWebhooks | null = null;
+
+try {
+  btcpayService = new BTCPayServerService();
+  btcpayWebhooks = new BTCPayWebhooks();
+  logger.info('BTCPay Server integration enabled');
+} catch (error) {
+  logger.warn('BTCPay Server integration disabled:', error instanceof Error ? error.message : 'Unknown error');
+}
 
 // 🔐 SECURE WALLET ADDRESSES - Environment Variables Only
 // All client crypto payments will be sent to these addresses
@@ -24,7 +37,7 @@ const getPaymentWallets = () => ({
   BTC: process.env.PAYMENT_WALLET_BTC || '',
   ETH: process.env.PAYMENT_WALLET_ETH || '',
   USDT_ERC20: process.env.PAYMENT_WALLET_ETH || '', // Same as ETH wallet for ERC20
-  USDT_TRC20: process.env.PAYMENT_WALLET_TRC20 || 'TA7LQSsqimN18hiwoeTZnymcDS4kUeNCT8', // TRC20 USDT - Your TRON wallet
+  USDT_TRC20: process.env.PAYMENT_WALLET_TRC20 || '', // TRC20 USDT - Configure your TRON wallet in env
   SOL: process.env.PAYMENT_WALLET_SOL || '',
   ADA: process.env.PAYMENT_WALLET_ADA || '',
   DOT: process.env.PAYMENT_WALLET_DOT || '',
@@ -34,7 +47,7 @@ const getPaymentWallets = () => ({
 // - BTC: ✅ Active (Client's wallet)
 // - ETH: ✅ Active (Client's wallet)
 // - USDT_ERC20: ✅ Active (Same as ETH wallet)
-// - USDT_TRC20: ✅ ACTIVE (Client's TRON wallet - TA7LQSsqimN18hiwoeTZnymcDS4kUeNCT8)
+// - USDT_TRC20: ✅ Active (Configure TRON wallet in environment variables)
 // - SOL: ✅ Active (Client's wallet)
 // - ADA: ✅ Active (Client's wallet)
 // - DOT: ✅ Active (Client's wallet)
@@ -140,30 +153,59 @@ router.post('/create-session', async (req: AuthenticatedRequest, res: Response):
     let session;
 
     if (paymentMethod === 'fiat') {
-      // Create Stripe payment session
-      session = await stripeClient.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [{
-          price_data: {
-            currency: plan.currency.toLowerCase(),
-            product_data: {
-              name: `${plan.name} Plan Subscription`,
-              description: plan.description,
+      // Create Stripe payment session (if Stripe is available)
+      if (stripeClient) {
+        session = await stripeClient.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [{
+            price_data: {
+              currency: plan.currency.toLowerCase(),
+              product_data: {
+                name: `${plan.name} Plan Subscription`,
+                description: plan.description,
+              },
+              unit_amount: plan.price * 100, // Convert to cents
             },
-            unit_amount: plan.price * 100, // Convert to cents
+            quantity: 1,
+          }],
+          mode: 'payment',
+          success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+          customer_email: req.user.email,
+          metadata: {
+            user_id: req.user.id,
+            plan_id: planId,
+            plan_name: plan.name,
           },
-          quantity: 1,
-        }],
-        mode: 'payment',
-        success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
-        customer_email: req.user.email,
-        metadata: {
-          user_id: req.user.id,
-          plan_id: planId,
-          plan_name: plan.name,
-        },
-      });
+        });
+      } else {
+        throw new Error('Stripe payment method not available');
+      }
+    } else if (paymentMethod === 'btcpay') {
+      // Create BTCPay Server invoice
+      if (btcpayService) {
+        const orderId = `btcpay_${Date.now()}_${req.user.id}`;
+        const btcpayResult = await btcpayService.createInvoice({
+          amount: plan.price,
+          currency: plan.currency,
+          orderId,
+          userId: req.user.id,
+          planId,
+          planName: plan.name,
+          redirectURL: `${process.env.FRONTEND_URL}/payment/success?btcpay_invoice=${orderId}`,
+        });
+
+        if (btcpayResult.success && btcpayResult.invoiceId && btcpayResult.checkoutUrl) {
+          session = {
+            id: btcpayResult.invoiceId,
+            url: btcpayResult.checkoutUrl,
+          };
+        } else {
+          throw new Error(btcpayResult.error || 'Failed to create BTCPay Server invoice');
+        }
+      } else {
+        throw new Error('BTCPay Server payment method not available');
+      }
     }
 
     // Store payment session in database
@@ -188,7 +230,10 @@ router.post('/create-session', async (req: AuthenticatedRequest, res: Response):
         sessionId: session?.id,
         url: session?.url,
         plan,
+        paymentMethod,
         wallets: paymentMethod === 'crypto' ? getPaymentWallets() : null,
+        btcpayEnabled: !!btcpayService,
+        stripeEnabled: !!stripeClient,
       },
       message: 'Payment session created successfully',
     } as ApiResponse);
@@ -255,6 +300,37 @@ router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
     logger.error('Webhook error:', error);
     res.status(400).json({
       error: `Webhook Error: ${error.message}`,
+    });
+  }
+});
+
+// BTCPay Server webhook handler
+router.post('/btcpay-webhook', async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!btcpayWebhooks) {
+      res.status(503).json({ error: 'BTCPay Server integration not available' });
+      return;
+    }
+
+    const sig = req.headers['btcpay-sig'];
+
+    if (!sig) {
+      res.status(400).json({ error: 'BTCPay webhook signature missing' });
+      return;
+    }
+
+    const body = JSON.stringify(req.body);
+    const result = await btcpayWebhooks.handleWebhook(sig as string, body);
+
+    if (result.received) {
+      res.json({ received: true });
+    } else {
+      res.status(400).json({ error: 'Webhook processing failed' });
+    }
+  } catch (error: any) {
+    logger.error('BTCPay webhook error:', error);
+    res.status(400).json({
+      error: `BTCPay Webhook Error: ${error.message}`,
     });
   }
 });
@@ -615,15 +691,57 @@ router.patch('/subscription/:userId', async (req: AuthenticatedRequest, res: Res
   }
 });
 
+// BTCPay Server health check (admin only)
+router.get('/btcpay-health', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Admin access required',
+      } as ApiResponse);
+      return;
+    }
+
+    if (!btcpayWebhooks) {
+      res.status(503).json({
+        success: false,
+        error: 'BTCPay Server integration not available',
+      } as ApiResponse);
+      return;
+    }
+
+    const health = await btcpayWebhooks.getHealthStatus();
+
+    res.json({
+      success: true,
+      data: health,
+      message: 'BTCPay Server health status retrieved successfully',
+    } as ApiResponse);
+  } catch (error: any) {
+    logger.error('BTCPay health check error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to retrieve BTCPay Server health status',
+    } as ApiResponse);
+  }
+});
+
 // Payment information for UI
 router.get('/info', async (req: Request, res: Response): Promise<void> => {
   try {
+    const paymentMethods = ['crypto'];
+
+    if (stripeClient) paymentMethods.unshift('stripe');
+    if (btcpayService) paymentMethods.unshift('btcpay');
+
     res.json({
       success: true,
       data: {
         supportedCrypto: getSupportedCrypto(),
         pricingPlans: PRICING_PLANS,
-        paymentMethods: ['stripe', 'crypto'],
+        paymentMethods,
+        btcpayEnabled: !!btcpayService,
+        stripeEnabled: !!stripeClient,
         supportEmail: 'payments@vaultguard.io',
         termsUrl: 'https://vaultguard.io/terms',
         refundPolicy: 'https://vaultguard.io/refunds',

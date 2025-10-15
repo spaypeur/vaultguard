@@ -87,7 +87,20 @@ export default function Register() {
         navigate('/dashboard');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Registration failed');
+      console.error('Registration error:', error);
+      
+      // If backend is not available, show helpful message
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        toast.error('Backend service unavailable. Please deploy your backend first.', {
+          duration: 8000,
+        });
+      } else if (error.code === 'ERR_NETWORK' || !error.response) {
+        toast.error('Cannot connect to backend. Please check your API_URL configuration.', {
+          duration: 8000,
+        });
+      } else {
+        toast.error(error.response?.data?.error || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
