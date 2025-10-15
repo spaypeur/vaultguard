@@ -96,7 +96,7 @@ export class QuantumResistantCrypto {
   }
 
   /**
-   * Symmetric encryption using AES-256-GCM
+   * Symmetric encryption using AES-256-CBC
    * @param data - Data to encrypt
    * @param key - Encryption key
    */
@@ -104,38 +104,33 @@ export class QuantumResistantCrypto {
     const iv = randomBytes(QUANTUM_CONFIG.HYBRID.IV_LENGTH);
     const cipher = createCipheriv(
       QUANTUM_CONFIG.HYBRID.SYMMETRIC_ALGO,
-      key,
+      key.slice(0, 32), // AES-256 needs 32 bytes key
       iv
     );
-    
-    const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
-    const authTag = cipher.getAuthTag();
-    
-    // Format: IV + Auth Tag + Encrypted Data
-    return Buffer.concat([iv, authTag, encrypted]);
+
+    let encrypted = cipher.update(data);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+
+    // Format: IV + Encrypted Data (CBC doesn't need separate auth tag)
+    return Buffer.concat([iv, encrypted]);
   }
 
   /**
-   * Symmetric decryption using AES-256-GCM
+   * Symmetric decryption using AES-256-CBC
    * @param data - Data to decrypt
    * @param key - Decryption key
    */
   private symmetricDecrypt(data: Buffer, key: Buffer): Buffer {
-    // Extract IV, Auth Tag and encrypted data
+    // Extract IV and encrypted data
     const iv = data.slice(0, QUANTUM_CONFIG.HYBRID.IV_LENGTH);
-    const authTag = data.slice(
-      QUANTUM_CONFIG.HYBRID.IV_LENGTH,
-      QUANTUM_CONFIG.HYBRID.IV_LENGTH + QUANTUM_CONFIG.HYBRID.AUTH_TAG_LENGTH
-    );
-    const encrypted = data.slice(QUANTUM_CONFIG.HYBRID.IV_LENGTH + QUANTUM_CONFIG.HYBRID.AUTH_TAG_LENGTH);
-    
+    const encrypted = data.slice(QUANTUM_CONFIG.HYBRID.IV_LENGTH);
+
     const decipher = createDecipheriv(
       QUANTUM_CONFIG.HYBRID.SYMMETRIC_ALGO,
-      key,
+      key.slice(0, 32),
       iv
     );
-    
-    decipher.setAuthTag(authTag);
+
     return Buffer.concat([decipher.update(encrypted), decipher.final()]);
   }
 }

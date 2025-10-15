@@ -15,9 +15,9 @@ export const QUANTUM_CONFIG = {
 
   // Hybrid encryption parameters
   HYBRID: {
-    SYMMETRIC_ALGO: 'aes-256-gcm',
+    SYMMETRIC_ALGO: 'aes-256-cbc',
     KEY_SIZE: 32,
     AUTH_TAG_LENGTH: 16,
-    IV_LENGTH: 12,
+    IV_LENGTH: 16,
   },
 };
