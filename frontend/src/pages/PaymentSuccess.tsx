@@ -215,6 +215,7 @@ const PaymentSuccess: React.FC = () => {
               </p>
             </div>
           </div>
+          </div>
         </motion.div>
       </div>
     </>

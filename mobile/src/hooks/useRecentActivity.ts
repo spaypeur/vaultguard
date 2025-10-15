@@ -26,7 +26,7 @@ export function useRecentActivity() {
       });
     });
 
-    socketService.subscribePortfolioUpdates((update) => {
+    socketService.subscribePortfolioUpdates('general', (update) => {
       addActivity({
         id: update.id,
         type: 'portfolio',

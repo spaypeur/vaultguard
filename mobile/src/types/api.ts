@@ -1,4 +1,25 @@
-import { UserRole, UserStatus, Jurisdiction } from '../../backend/src/types/database';
+// Local type definitions for mobile app
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin'
+}
+
+export enum UserStatus {
+  ACTIVE = 'active',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending'
+}
+
+export enum Jurisdiction {
+  US = 'US',
+  EU = 'EU',
+  UK = 'UK',
+  CA = 'CA',
+  AU = 'AU',
+  SG = 'SG',
+  OTHER = 'OTHER'
+}
 
 export interface AuthResponse {
   success: boolean;
