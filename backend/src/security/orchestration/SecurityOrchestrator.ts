@@ -14,6 +14,7 @@ import {
   ActionStatus,
   ConditionOperator,
 } from './types';
+import { ThreatSeverity } from '../predictive/types';
 
 export class SecurityOrchestrator {
   private static instance: SecurityOrchestrator;
@@ -25,6 +26,7 @@ export class SecurityOrchestrator {
   private activeThreats: Map<string, SecurityEvent>;
   private actionQueue: DefenseAction[];
   private metrics: OrchestrationMetrics;
+  private maliciousAddresses: Set<string>;
   private readonly logger: Logger;
 
   private constructor() {
@@ -35,6 +37,7 @@ export class SecurityOrchestrator {
     this.policies = new Map();
     this.activeThreats = new Map();
     this.actionQueue = [];
+    this.maliciousAddresses = new Set(['0x123456789', '0xabcdef']); // Initialize with known malicious addresses
     this.metrics = this.initializeMetrics();
     this.logger = new Logger('security-orchestrator');
   }
@@ -92,8 +95,20 @@ export class SecurityOrchestrator {
    * @returns Current defense matrix state
    */
   public async getDefenseMatrix(): Promise<DefenseMatrix> {
+    // Convert SecurityEvent[] to ThreatIndicator[] for compatibility
+    const threats: Map<string, any> = new Map();
+    for (const [key, event] of this.activeThreats) {
+      threats.set(key, {
+        id: event.id,
+        type: event.type,
+        confidence: 0.8, // Default confidence
+        metadata: event.data,
+        timestamp: event.timestamp
+      });
+    }
+
     return {
-      activeThreats: this.activeThreats,
+      activeThreats: threats,
       activePolicies: Array.from(this.policies.values()),
       pendingActions: this.actionQueue.filter(a => a.status === ActionStatus.PENDING),
       completedActions: this.actionQueue.filter(a => a.status === ActionStatus.COMPLETED),
@@ -154,7 +169,7 @@ export class SecurityOrchestrator {
       await this.processEvent({
         id: crypto.randomUUID(),
         type: SecurityEventType.SYSTEM_ERROR,
-        severity: 'CRITICAL',
+        severity: ThreatSeverity.CRITICAL,
         timestamp: new Date(),
         source: 'system',
         data: { error: error.message, stack: error.stack },
@@ -171,7 +186,7 @@ export class SecurityOrchestrator {
       await this.processEvent({
         id: crypto.randomUUID(),
         type: SecurityEventType.SUSPICIOUS_TRANSACTION,
-        severity: 'HIGH',
+        severity: ThreatSeverity.HIGH,
         timestamp: new Date(),
         source: 'blockchain',
         data: { transaction: tx },
@@ -292,16 +307,19 @@ export class SecurityOrchestrator {
 
   // Helper methods for transaction analysis
   private async getHistoricalAverage(): Promise<number> {
-    try {
-      // Calculate average from recent transactions in cache
-      const recentTxs = await this.cache.get('recent_transactions');
-      if (!recentTxs || recentTxs.length === 0) return 1000;
-      
-      const sum = recentTxs.reduce((acc: number, tx: any) => acc + (tx.value || 0), 0);
-      return sum / recentTxs.length;
-    } catch (error) {
-      return 1000; // Fallback value
-    }
+      try {
+          // Calculate average from recent transactions in redis
+          const recentTxs = await this.redis.get('recent_transactions');
+          if (!recentTxs) return 1000;
+
+          const txs = JSON.parse(recentTxs);
+          if (!txs || txs.length === 0) return 1000;
+
+          const sum = txs.reduce((acc: number, tx: any) => acc + (tx.value || 0), 0);
+          return sum / txs.length;
+      } catch (error) {
+          return 1000; // Fallback value
+      }
   }
 
   private checkMixerIndicator(tx: any, indicator: string): boolean {
@@ -319,19 +337,20 @@ export class SecurityOrchestrator {
   }
 
   private async getRecentTransactions(address: string, timeWindow: number): Promise<any[]> {
-    try {
-      const cacheKey = `tx_history_${address}`;
-      const cached = await this.cache.get(cacheKey);
-      
-      if (cached) {
-        const cutoffTime = Date.now() - (timeWindow * 60 * 60 * 1000);
-        return cached.filter((tx: any) => tx.timestamp > cutoffTime);
+      try {
+          const cacheKey = `tx_history_${address}`;
+          const cached = await this.redis.get(cacheKey);
+
+          if (cached) {
+              const txs = JSON.parse(cached);
+              const cutoffTime = Date.now() - (timeWindow * 60 * 60 * 1000);
+              return txs.filter((tx: any) => tx.timestamp > cutoffTime);
+          }
+
+          return [];
+      } catch (error) {
+          return [];
       }
-      
-      return [];
-    } catch (error) {
-      return [];
-    }
   }
 
   private checkAttackSignature(tx: any, signature: string): boolean {
@@ -349,22 +368,25 @@ export class SecurityOrchestrator {
   }
 
   private async getNormalGasPrice(): Promise<number> {
-    try {
-      // Get average gas price from recent transactions
-      const recentTxs = await this.cache.get('recent_transactions');
-      if (!recentTxs || recentTxs.length === 0) return 20;
-      
-      const gasPrices = recentTxs
-        .map((tx: any) => tx.gasPrice || 0)
-        .filter((price: number) => price > 0);
-      
-      if (gasPrices.length === 0) return 20;
-      
-      const sum = gasPrices.reduce((acc: number, price: number) => acc + price, 0);
-      return sum / gasPrices.length;
-    } catch (error) {
-      return 20; // Fallback value in Gwei
-    }
+      try {
+          // Get average gas price from recent transactions
+          const recentTxs = await this.redis.get('recent_transactions');
+          if (!recentTxs) return 20;
+
+          const txs = JSON.parse(recentTxs);
+          if (!txs || txs.length === 0) return 20;
+
+          const gasPrices = txs
+              .map((tx: any) => tx.gasPrice || 0)
+              .filter((price: number) => price > 0);
+
+          if (gasPrices.length === 0) return 20;
+
+          const sum = gasPrices.reduce((acc: number, price: number) => acc + price, 0);
+          return sum / gasPrices.length;
+      } catch (error) {
+          return 20; // Fallback value in Gwei
+      }
   }
 
   private findApplicablePolicies(event: SecurityEvent): DefensePolicy[] {
@@ -502,7 +524,7 @@ export class SecurityOrchestrator {
     await this.processEvent({
       id: crypto.randomUUID(),
       type: SecurityEventType.SYSTEM_ERROR,
-      severity: 'HIGH',
+      severity: ThreatSeverity.HIGH,
       timestamp: new Date(),
       source: 'orchestrator',
       data: { action, error: action.result?.message },
@@ -519,7 +541,7 @@ export class SecurityOrchestrator {
         await this.executePolicy(policy, {
           id: crypto.randomUUID(),
           type: SecurityEventType.SYSTEM_ERROR,
-          severity: 'HIGH',
+          severity: ThreatSeverity.HIGH,
           timestamp: new Date(),
           source: 'orchestrator',
           data: { originalAction: action },
