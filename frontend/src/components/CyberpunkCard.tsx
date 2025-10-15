@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 interface CyberpunkCardProps {
   children: ReactNode;
   className?: string;
-  glowColor?: 'cyan' | 'purple' | 'orange' | 'green';
+  glowColor?: 'cyan' | 'purple' | 'orange' | 'green' | 'red' | 'blue' | 'yellow';
   variant?: 'default' | 'glass' | 'solid';
 }
 
@@ -18,6 +18,9 @@ export default function CyberpunkCard({
     purple: 'shadow-purple-500/20 border-purple-500/30 hover:border-purple-500/50',
     orange: 'shadow-orange-500/20 border-orange-500/30 hover:border-orange-500/50',
     green: 'shadow-green-500/20 border-green-500/30 hover:border-green-500/50',
+    red: 'shadow-red-500/20 border-red-500/30 hover:border-red-500/50',
+    blue: 'shadow-blue-500/20 border-blue-500/30 hover:border-blue-500/50',
+    yellow: 'shadow-yellow-500/20 border-yellow-500/30 hover:border-yellow-500/50',
   };
 
   const variants = {

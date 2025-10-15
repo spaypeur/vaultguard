@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import {
+  ShieldCheckIcon,
+  LockClosedIcon,
+  GlobeAltIcon,
+  CheckBadgeIcon,
+  CurrencyDollarIcon,
+  EyeIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import VaultDoor3D from '../components/VaultDoor3D';
 import VaultNumpad from '../components/VaultNumpad';
 
@@ -30,25 +39,28 @@ export default function VaultLogin() {
 
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center p-8">
-      <div className="w-full max-w-6xl">
-        <div className="text-center mb-8">
-          <motion.h1
-            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 text-transparent bg-clip-text mb-4"
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            VAULTGUARD SECURE ACCESS
-          </motion.h1>
-          <motion.p
-            className="text-gray-400 text-lg md:text-xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            Enter your advanced quantum-encrypted access code to proceed
-          </motion.p>
-        </div>
+      <div className="w-full max-w-7xl">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Side - 3D Vault Animation */}
+          <div className="order-2 lg:order-1">
+            <div className="text-center mb-8">
+              <motion.h1
+                className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 text-transparent bg-clip-text mb-4"
+                initial={{ opacity: 0, y: -50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                VAULTGUARD SECURE ACCESS
+              </motion.h1>
+              <motion.p
+                className="text-gray-400 text-lg md:text-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+              >
+                Enter your advanced quantum-encrypted access code to proceed
+              </motion.p>
+            </div>
 
         <div className="relative">
           <VaultDoor3D onUnlock={handleUnlock} />
@@ -360,6 +372,168 @@ export default function VaultLogin() {
               Multi-factor biometric authentication ready • Continuous verification
             </p>
           </motion.div>
+        </div>
+      </div>
+
+          {/* Right Side - Value Propositions */}
+          <div className="order-1 lg:order-2 space-y-8">
+            {/* Rotating Value Propositions */}
+            <motion.div
+              className="text-center lg:text-left"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <motion.h2
+                className="text-3xl md:text-4xl font-bold text-white mb-6"
+                key={Math.floor(Date.now() / 5000) % 4} // Changes every 5 seconds
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                {[
+                  "Join 10,000+ Protected Investors",
+                  "$2.4B+ in Assets Recovered",
+                  "24/7 Dark Web Monitoring",
+                  "Government-Certified Security Expert"
+                ][Math.floor(Date.now() / 5000) % 4]}
+              </motion.h2>
+              
+              <p className="text-gray-300 text-lg mb-8">
+                The world's most advanced cryptocurrency security platform. 
+                Protect your digital assets with military-grade encryption and AI-powered threat detection.
+              </p>
+            </motion.div>
+
+            {/* Trust Badges */}
+            <motion.div
+              className="grid grid-cols-2 gap-4"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
+                <LockClosedIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                <div className="text-white font-semibold text-sm">256-bit Encryption</div>
+                <div className="text-gray-400 text-xs">Military Grade</div>
+              </div>
+              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
+                <CheckBadgeIcon className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                <div className="text-white font-semibold text-sm">SOC 2 Certified</div>
+                <div className="text-gray-400 text-xs">Compliance Ready</div>
+              </div>
+              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
+                <GlobeAltIcon className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                <div className="text-white font-semibold text-sm">GDPR Compliant</div>
+                <div className="text-gray-400 text-xs">Privacy Protected</div>
+              </div>
+              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 text-center">
+                <ShieldCheckIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                <div className="text-white font-semibold text-sm">Zero Trust</div>
+                <div className="text-gray-400 text-xs">Architecture</div>
+              </div>
+            </motion.div>
+
+            {/* Social Proof Ticker */}
+            <motion.div
+              className="bg-gray-900/30 border border-gray-700 rounded-lg p-6 overflow-hidden"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <UserGroupIcon className="w-5 h-5 text-green-400" />
+                <span className="text-green-400 font-semibold text-sm">LIVE ACTIVITY</span>
+              </div>
+              
+              <motion.div
+                className="space-y-3"
+                animate={{ y: [0, -60, -120, -180, 0] }}
+                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              >
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white font-medium">John D.</div>
+                    <div className="text-gray-400 text-sm">recovered $1.2M last week</div>
+                  </div>
+                  <div className="text-green-400 font-bold">+$1.2M</div>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white font-medium">Sarah M.</div>
+                    <div className="text-gray-400 text-sm">prevented $500K phishing attack</div>
+                  </div>
+                  <div className="text-blue-400 font-bold">PROTECTED</div>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white font-medium">Michael R.</div>
+                    <div className="text-gray-400 text-sm">secured $2.8M portfolio</div>
+                  </div>
+                  <div className="text-purple-400 font-bold">SECURED</div>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white font-medium">Lisa K.</div>
+                    <div className="text-gray-400 text-sm">recovered stolen NFTs worth $850K</div>
+                  </div>
+                  <div className="text-green-400 font-bold">+$850K</div>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <div className="text-white font-medium">David L.</div>
+                    <div className="text-gray-400 text-sm">blocked dark web threat</div>
+                  </div>
+                  <div className="text-red-400 font-bold">BLOCKED</div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Key Stats */}
+            <motion.div
+              className="grid grid-cols-3 gap-4 text-center"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+            >
+              <div>
+                <div className="text-2xl font-bold text-cyan-400">94.7%</div>
+                <div className="text-gray-400 text-sm">Recovery Rate</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-400">$2.4B+</div>
+                <div className="text-gray-400 text-sm">Assets Secured</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-purple-400">24/7</div>
+                <div className="text-gray-400 text-sm">Monitoring</div>
+              </div>
+            </motion.div>
+
+            {/* Quick Access Links */}
+            <motion.div
+              className="space-y-3"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.0 }}
+            >
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all duration-300"
+              >
+                Create Secure Account
+              </button>
+              <div className="text-center">
+                <button
+                  onClick={() => navigate('/services/recovery')}
+                  className="text-red-400 hover:text-red-300 text-sm underline"
+                >
+                  🚨 Emergency: Lost Crypto? Get Help Now
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
 

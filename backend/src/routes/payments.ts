@@ -402,7 +402,12 @@ router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Verify crypto payment (manual verification for non-automated payments)
+import CryptoPaymentVerifier from '@/services/cryptoPaymentVerifier';
+
+// Initialize crypto payment verifier
+const cryptoVerifier = CryptoPaymentVerifier.getInstance();
+
+// Verify crypto payment (automated verification using blockchain APIs)
 router.post('/verify-crypto', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -423,37 +428,53 @@ router.post('/verify-crypto', async (req: AuthenticatedRequest, res: Response): 
       return;
     }
 
-    // Note: In production, integrate with blockchain explorers for automatic verification
-    // For now, this creates a manual verification request
+    // Validate cryptocurrency is supported
+    if (!PAYMENT_WALLETS[cryptocurrency as keyof typeof PAYMENT_WALLETS]) {
+      res.status(400).json({
+        success: false,
+        error: `Unsupported cryptocurrency: ${cryptocurrency}`,
+      } as ApiResponse);
+      return;
+    }
 
     const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
+    const expectedAmount = parseFloat(amount);
 
-    // Log crypto payment verification request
-    await DatabaseService.logAuditEvent(
-      req.user.id,
-      'crypto_payment_verification_requested',
-      'payment',
-      null,
-      null,
-      {
-        planId,
-        planName: plan.name,
-        cryptocurrency,
-        transactionId,
-        amount: parseFloat(amount),
-        walletAddress: PAYMENT_WALLETS[cryptocurrency as keyof typeof PAYMENT_WALLETS],
-        status: 'pending_verification',
-      }
-    );
+    // Validate amount matches plan price
+    if (Math.abs(expectedAmount - plan.price) > plan.price * 0.001) {
+      res.status(400).json({
+        success: false,
+        error: `Payment amount ${expectedAmount} does not match plan price ${plan.price}`,
+      } as ApiResponse);
+      return;
+    }
+
+    // Generate unique payment ID
+    const paymentId = `crypto_${Date.now()}_${req.user.id}`;
+
+    // Submit payment for automated verification
+    const verificationRequest = {
+      userId: req.user.id,
+      planId,
+      cryptocurrency,
+      expectedAmount,
+      transactionHash: transactionId,
+      walletAddress: PAYMENT_WALLETS[cryptocurrency as keyof typeof PAYMENT_WALLETS],
+      paymentId,
+    };
+
+    await cryptoVerifier.submitPaymentVerification(verificationRequest);
 
     res.json({
       success: true,
-      message: 'Crypto payment verification request submitted. Please allow 24-48 hours for manual verification.',
+      message: 'Crypto payment submitted for automated verification. You will receive an email confirmation once verified.',
       data: {
-        requestId: `req_${Date.now()}_${req.user.id}`,
-        expectedWallet: PAYMENT_WALLETS[cryptocurrency as keyof typeof PAYMENT_WALLETS],
+        paymentId,
+        expectedWallet: verificationRequest.walletAddress,
         expectedAmount: plan.price,
         currency: 'USD',
+        cryptocurrency,
+        estimatedVerificationTime: '5-15 minutes',
       },
     } as ApiResponse);
   } catch (error: any) {
@@ -461,6 +482,153 @@ router.post('/verify-crypto', async (req: AuthenticatedRequest, res: Response): 
     res.status(400).json({
       success: false,
       error: error.message || 'Failed to submit crypto payment verification',
+    } as ApiResponse);
+  }
+});
+
+// Get crypto payment status
+router.get('/crypto-status/:paymentId', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      } as ApiResponse);
+      return;
+    }
+
+    const { paymentId } = req.params;
+
+    // Get payment status from audit logs
+    const auditLogs = await DatabaseService.getAuditLogsByUserId(req.user.id, 100);
+
+    const paymentLogs = auditLogs.filter(log =>
+      log.resource_id === paymentId &&
+      (log.action.includes('payment') || log.action.includes('subscription'))
+    );
+
+    if (paymentLogs.length === 0) {
+      res.status(404).json({
+        success: false,
+        error: 'Payment not found',
+      } as ApiResponse);
+      return;
+    }
+
+    // Determine current status
+    let status = 'pending';
+    let message = 'Payment is being verified...';
+
+    const verifiedLog = paymentLogs.find(log => log.action === 'crypto_payment_verified');
+    const failedLog = paymentLogs.find(log => log.action === 'crypto_payment_verification_failed');
+
+    if (verifiedLog) {
+      status = 'verified';
+      message = 'Payment verified successfully and subscription activated';
+    } else if (failedLog) {
+      status = 'failed';
+      message = failedLog.new_values?.reason || 'Payment verification failed';
+    }
+
+    res.json({
+      success: true,
+      data: {
+        paymentId,
+        status,
+        message,
+        logs: paymentLogs.map(log => ({
+          action: log.action,
+          timestamp: log.created_at,
+          details: log.new_values,
+        })),
+      },
+    } as ApiResponse);
+  } catch (error: any) {
+    logger.error('Get crypto payment status error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to get payment status',
+    } as ApiResponse);
+  }
+});
+
+// Start crypto payment monitoring (admin only)
+router.post('/admin/start-monitoring', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Admin access required',
+      } as ApiResponse);
+      return;
+    }
+
+    cryptoVerifier.startMonitoring();
+
+    res.json({
+      success: true,
+      message: 'Automated crypto payment monitoring started',
+    } as ApiResponse);
+  } catch (error: any) {
+    logger.error('Start monitoring error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to start monitoring',
+    } as ApiResponse);
+  }
+});
+
+// Stop crypto payment monitoring (admin only)
+router.post('/admin/stop-monitoring', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Admin access required',
+      } as ApiResponse);
+      return;
+    }
+
+    cryptoVerifier.stopMonitoring();
+
+    res.json({
+      success: true,
+      message: 'Automated crypto payment monitoring stopped',
+    } as ApiResponse);
+  } catch (error: any) {
+    logger.error('Stop monitoring error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to stop monitoring',
+    } as ApiResponse);
+  }
+});
+
+// Get blockchain API health status (admin only)
+router.get('/admin/blockchain-health', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Admin access required',
+      } as ApiResponse);
+      return;
+    }
+
+    const health = await cryptoVerifier.healthCheck();
+
+    res.json({
+      success: true,
+      data: {
+        health,
+        timestamp: new Date().toISOString(),
+      },
+    } as ApiResponse);
+  } catch (error: any) {
+    logger.error('Blockchain health check error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to check blockchain health',
     } as ApiResponse);
   }
 });

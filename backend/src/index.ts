@@ -26,6 +26,7 @@ import { RecoveryOperationsService } from './services/recoveryOperations';
 import { NotificationService } from './services/notification'; // Import NotificationService
 import { BillingService } from './services/billingService'; // Import BillingService
 import { Jurisdiction } from './types'; // Import Jurisdiction enum
+import CryptoPaymentVerifier from './services/cryptoPaymentVerifier'; // Import CryptoPaymentVerifier
 
 // Routes
 import authRoutes from '@/routes/auth';
@@ -37,6 +38,9 @@ import recoveryRoutes from '@/routes/recovery';
 import userRoutes from '@/routes/user';
 import mapRoutes from '@/routes/map';
 import adminRoutes from '@/routes/admin';
+import leadMagnetsRoutes from '@/routes/leadMagnets';
+import referralRoutes from '@/routes/referrals';
+import paymentRoutes from '@/routes/payments';
 // import notificationRoutes from '@/routes/notifications';
 // import expertRecoveryRoutes from '@/routes/expertRecovery';
 
@@ -65,6 +69,9 @@ try {
   logger.warn('Failed to initialize Redis-dependent services:', error);
   logger.warn('Continuing without Redis services...');
 }
+
+// Initialize crypto payment verifier
+const cryptoPaymentVerifier = CryptoPaymentVerifier.getInstance();
 
 // Initialize HTTP server
 const server = createServer(app);
@@ -170,7 +177,10 @@ app.get('/', (req: Request, res: Response) => {
       threats: '/api/threats',
       compliance: '/api/compliance',
       websocket: '/api/websocket',
-      recovery: '/api/recovery'
+      recovery: '/api/recovery',
+      leadMagnets: '/api/lead-magnets',
+      referrals: '/api/referrals',
+      payments: '/api/payments'
     }
   });
 });
@@ -269,6 +279,9 @@ app.use('/api/recovery', authMiddleware, recoveryRoutes);
 app.use('/api/user', authMiddleware, userRoutes);
 app.use('/api/map', authMiddleware, mapRoutes);
 app.use('/api/admin', adminRoutes); // Admin routes (middleware applied within routes)
+app.use('/api/lead-magnets', leadMagnetsRoutes); // Lead magnet routes (public access)
+app.use('/api/referrals', authMiddleware, referralRoutes); // Referral routes (authenticated access)
+app.use('/api/payments', paymentRoutes); // Payment routes (mixed auth requirements)
 // app.use('/api/notifications', authMiddleware, notificationRoutes);
 // app.use('/api/expert-recovery', authMiddleware, expertRecoveryRoutes);
 
@@ -310,12 +323,17 @@ const PORT = process.env.PORT || 3001;
 
 // Initialize database and cache before starting the server
 initializeDatabase()
-  .then(() => {
+  .then(async () => {
+    // Start crypto payment verification monitoring
+    cryptoPaymentVerifier.startMonitoring();
+    logger.info('🔍 Automated crypto payment verification monitoring started');
+
     server.listen(PORT, () => {
       logger.info(`🚀 VaultGuard Backend Server running on port ${PORT}`);
       logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`🔒 Security: ${process.env.NODE_ENV === 'production' ? 'ENABLED' : 'DEVELOPMENT'}`);
       logger.info('🔄 Supabase-Redis integration initialized');
+      logger.info('💰 Crypto payment verification system active');
     });
   })
   .catch((error) => {

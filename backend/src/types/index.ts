@@ -423,3 +423,196 @@ export interface ExchangeAPIConfig {
   apiSecret: string;
   // Add other configuration parameters as needed
 }
+
+// Referral Program Types
+export interface Referral {
+  id: string;
+  referrerId: string;
+  refereeId?: string;
+  referralCode: string;
+  status: ReferralStatus;
+  type: ReferralType;
+  rewardType: RewardType;
+  referrerReward: number;
+  refereeReward: number;
+  commissionRate?: number; // For affiliate programs
+  expiresAt?: Date;
+  usedAt?: Date;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum ReferralStatus {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
+  FRAUD_SUSPECTED = 'fraud_suspected',
+}
+
+export enum ReferralType {
+  STANDARD = 'standard',
+  AFFILIATE = 'affiliate',
+  INFLUENCER = 'influencer',
+  PARTNER = 'partner',
+}
+
+export enum RewardType {
+  CREDIT = 'credit',
+  DISCOUNT = 'discount',
+  FREE_MONTH = 'free_month',
+  COMMISSION = 'commission',
+  POINTS = 'points',
+}
+
+export interface ReferralReward {
+  id: string;
+  referralId: string;
+  userId: string;
+  type: RewardType;
+  amount: number;
+  currency: string;
+  status: RewardStatus;
+  distributedAt?: Date;
+  expiresAt?: Date;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum RewardStatus {
+  PENDING = 'pending',
+  DISTRIBUTED = 'distributed',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
+}
+
+export interface ReferralLeaderboard {
+  userId: string;
+  userName: string;
+  referralCount: number;
+  totalRewards: number;
+  rank: number;
+  badges: ReferralBadge[];
+  period: LeaderboardPeriod;
+}
+
+export enum LeaderboardPeriod {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+  ALL_TIME = 'all_time',
+}
+
+export interface ReferralBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt: Date;
+  criteria: BadgeCriteria;
+}
+
+export interface BadgeCriteria {
+  referralCount?: number;
+  totalRewards?: number;
+  streakDays?: number;
+  tier?: string;
+}
+
+export interface AffiliateProgram {
+  id: string;
+  userId: string;
+  affiliateCode: string;
+  commissionRate: number;
+  status: AffiliateStatus;
+  totalEarnings: number;
+  totalReferrals: number;
+  payoutInfo: PayoutInfo;
+  performance: AffiliatePerformance;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum AffiliateStatus {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  SUSPENDED = 'suspended',
+  TERMINATED = 'terminated',
+}
+
+export interface PayoutInfo {
+  method: PayoutMethod;
+  accountDetails: Record<string, any>;
+  minimumPayout: number;
+  currency: string;
+}
+
+export enum PayoutMethod {
+  BANK_TRANSFER = 'bank_transfer',
+  CRYPTO = 'crypto',
+  PAYPAL = 'paypal',
+  CHECK = 'check',
+}
+
+export interface AffiliatePerformance {
+  clicks: number;
+  conversions: number;
+  conversionRate: number;
+  earnings: {
+    thisMonth: number;
+    lastMonth: number;
+    total: number;
+  };
+  topReferrals: string[]; // Referral IDs
+}
+
+export interface ReferralLink {
+  id: string;
+  referralId: string;
+  url: string;
+  qrCode?: string;
+  platform?: SocialPlatform;
+  clicks: number;
+  conversions: number;
+  createdAt: Date;
+  expiresAt?: Date;
+}
+
+export enum SocialPlatform {
+  TWITTER = 'twitter',
+  FACEBOOK = 'facebook',
+  LINKEDIN = 'linkedin',
+  WHATSAPP = 'whatsapp',
+  TELEGRAM = 'telegram',
+  EMAIL = 'email',
+  DIRECT = 'direct',
+}
+
+export interface FraudDetection {
+  referralId: string;
+  riskScore: number;
+  flags: FraudFlag[];
+  status: FraudStatus;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  notes?: string;
+}
+
+export enum FraudFlag {
+  MULTIPLE_ACCOUNTS = 'multiple_accounts',
+  RAPID_REFERRALS = 'rapid_referrals',
+  SUSPICIOUS_IP = 'suspicious_ip',
+  VPN_USAGE = 'vpn_usage',
+  DEVICE_FINGERPRINT = 'device_fingerprint',
+  UNUSUAL_PATTERN = 'unusual_pattern',
+}
+
+export enum FraudStatus {
+  CLEAN = 'clean',
+  SUSPICIOUS = 'suspicious',
+  FLAGGED = 'flagged',
+  BLOCKED = 'blocked',
+}

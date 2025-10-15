@@ -149,4 +149,22 @@ api.interceptors.response.use(
   }
 );
 
+// Lead Magnets API
+export const leadMagnetsAPI = {
+  // Capture lead magnet email
+  captureLead: async (email: string, leadMagnet: string) => {
+    const response = await api.post('/lead-magnets/capture', {
+      email,
+      leadMagnet
+    });
+    return response.data;
+  },
+
+  // Get all lead captures (admin only)
+  getLeadCaptures: async () => {
+    const response = await api.get('/lead-magnets/captures');
+    return response.data;
+  }
+};
+
 export default api;

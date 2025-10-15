@@ -9,6 +9,7 @@ interface User {
   role: string;
   status?: string;
   jurisdiction?: string;
+  subscription?: string;
 }
 
 interface AuthState {

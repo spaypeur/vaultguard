@@ -4,7 +4,8 @@ import {
   UserIcon,
   ShieldCheckIcon,
   BellIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  GiftIcon
 } from '@heroicons/react/24/outline';
 import api from '../services/api';
 
@@ -153,6 +154,15 @@ export default function Settings() {
               >
                 <GlobeAltIcon className="h-5 w-5 inline mr-3" />
                 Preferences
+              </button>
+              <button
+                className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'referrals' ? 'bg-blue-900/20 text-blue-400' : 'text-gray-400 hover:text-white'
+                }`}
+                onClick={() => setActiveTab('referrals')}
+              >
+                <GiftIcon className="h-5 w-5 inline mr-3" />
+                Referrals
               </button>
             </div>
           </div>
@@ -492,6 +502,168 @@ export default function Settings() {
                     />
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'referrals' && (
+            <div className="space-y-6">
+              <div className="card">
+                <h2 className="text-xl font-semibold text-white mb-6">Referral Program</h2>
+                <p className="text-gray-400 mb-6">
+                  Earn rewards by inviting friends and family to join VaultGuard. You'll both benefit from our secure crypto management platform.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-lg p-6 border border-green-500/20">
+                    <div className="flex items-center mb-4">
+                      <GiftIcon className="h-8 w-8 text-green-400 mr-3" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Your Reward</h3>
+                        <p className="text-gray-400">$500 Credit or 1 Month Free</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-300">
+                      Get $500 in platform credits or one month free of our Guardian plan when someone signs up with your referral code.
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg p-6 border border-blue-500/20">
+                    <div className="flex items-center mb-4">
+                      <UserIcon className="h-8 w-8 text-blue-400 mr-3" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Their Reward</h3>
+                        <p className="text-gray-400">10% Off First Year</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-300">
+                      Your referrals get 10% off their first year subscription, making it easier for them to get started.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900/50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Your Referral Code</h3>
+                  <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        className="input input-bordered w-full font-mono text-lg"
+                        value="VAULTGUARD2024" // This would come from API
+                        readOnly
+                      />
+                    </div>
+                    <button className="btn btn-primary">
+                      Generate New Code
+                    </button>
+                    <button className="btn btn-outline">
+                      Copy Code
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Share this code with friends and family to earn rewards
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Share Your Link</h3>
+                  <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        value="https://vaultguard.com/register?ref=VAULTGUARD2024" // This would come from API
+                        readOnly
+                      />
+                    </div>
+                    <button className="btn btn-primary">
+                      Generate Link
+                    </button>
+                    <button className="btn btn-outline">
+                      Copy Link
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Social Media Sharing</h3>
+                  <div className="flex gap-3">
+                    <button className="btn btn-outline btn-sm">
+                      Share on Twitter
+                    </button>
+                    <button className="btn btn-outline btn-sm">
+                      Share on Facebook
+                    </button>
+                    <button className="btn btn-outline btn-sm">
+                      Share on LinkedIn
+                    </button>
+                    <button className="btn btn-outline btn-sm">
+                      Generate QR Code
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card">
+                <h2 className="text-xl font-semibold text-white mb-6">Referral Statistics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-400">0</div>
+                    <div className="text-sm text-gray-400">Total Referrals</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-400">0</div>
+                    <div className="text-sm text-gray-400">Successful Conversions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-400">$0</div>
+                    <div className="text-sm text-gray-400">Total Earnings</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-400">#-</div>
+                    <div className="text-sm text-gray-400">Your Rank</div>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <button className="btn btn-primary">
+                    View Leaderboard
+                  </button>
+                </div>
+              </div>
+
+              <div className="card">
+                <h2 className="text-xl font-semibold text-white mb-6">Affiliate Program</h2>
+                <p className="text-gray-400 mb-4">
+                  Join our affiliate program to earn recurring commissions from referrals who become paying customers.
+                </p>
+
+                <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg p-6 border border-purple-500/20 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Affiliate Status</h3>
+                      <p className="text-gray-400">Earn 10% recurring commission from referred customers</p>
+                    </div>
+                    <button className="btn btn-primary">
+                      Join Affiliate Program
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-400">10%</div>
+                    <div className="text-sm text-gray-400">Commission Rate</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">30 Days</div>
+                    <div className="text-sm text-gray-400">Cookie Duration</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-400">Monthly</div>
+                    <div className="text-sm text-gray-400">Payout Schedule</div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
