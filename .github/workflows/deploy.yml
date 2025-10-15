@@ -28,15 +28,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          vercel-args: --prod
+      - name: Deploy to Vercel (Manual)
+        run: |
+          echo "🚀 Frontend deployment should be handled via Vercel's GitHub integration"
+          echo "📝 Connect this repository to Vercel manually"
+          echo "🔧 Configure environment variables in Vercel dashboard"
+          echo "✅ Build completed successfully - ready for deployment"
 
   deploy-backend:
     runs-on: ubuntu-latest
