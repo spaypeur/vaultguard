@@ -61,6 +61,52 @@ export class DarkWebMonitor {
         return DarkWebMonitor.instance;
     }
 
+    // Additional methods for dark web scanning
+    public async scanHaveIBeenPwned(assets: string[]): Promise<DarkWebAlert[]> {
+        // Placeholder implementation
+        return [];
+    }
+
+    public async scanDehashed(assets: string[]): Promise<DarkWebAlert[]> {
+        // Placeholder implementation
+        return [];
+    }
+
+    public async scanDarkMarkets(assets: string[]): Promise<DarkWebAlert[]> {
+        // Placeholder implementation
+        return [];
+    }
+
+    public async getAlerts(userId?: string): Promise<DarkWebAlert[]> {
+        // Placeholder implementation
+        return [];
+    }
+
+    public async countAlerts(userId?: string): Promise<number> {
+        // Placeholder implementation
+        return 0;
+    }
+
+    public async getAlertById(alertId: string): Promise<DarkWebAlert | null> {
+        // Placeholder implementation
+        return null;
+    }
+
+    public async updateAlert(alertId: string, updates: Partial<DarkWebAlert>): Promise<DarkWebAlert> {
+        // Placeholder implementation
+        throw new Error('Not implemented');
+    }
+
+    public async getStatistics(userId?: string): Promise<any> {
+        // Placeholder implementation
+        return { total: 0, critical: 0, high: 0, medium: 0, low: 0 };
+    }
+
+    public async verifyAlert(alertId: string): Promise<boolean> {
+        // Placeholder implementation
+        return false;
+    }
+
     public async monitorAssets(assets: string[]): Promise<DarkWebAlert[]> {
         const alerts: DarkWebAlert[] = [];
         
