@@ -27,7 +27,7 @@ const getRefreshToken = () => {
 // Get CSRF token
 const fetchCsrfToken = async () => {
   try {
-    const { data } = await axios.get('/api/csrf-token', { withCredentials: true });
+    const { data } = await api.get('/csrf-token');
     return data.csrfToken;
   } catch (error) {
     console.error('Failed to fetch CSRF token:', error);
@@ -78,7 +78,7 @@ api.interceptors.response.use(
     // Handle CSRF token errors
     if (error.response?.status === 403 && error.response?.data?.code === 'EBADCSRFTOKEN') {
       try {
-        const { data } = await axios.get('/api/csrf-token', { withCredentials: true });
+        const { data } = await api.get('/csrf-token');
         if (data.csrfToken) {
           originalRequest.headers['x-csrf-token'] = data.csrfToken;
           return api(originalRequest);

@@ -1,154 +1,8 @@
-import { generateForm8949PDF } from '@/services/pdfGenerator';
-import { calculateGainsLosses, getAllUserTransactions } from '@/services/taxCalculator';
-import { Logger } from '@/utils/logger';
-
-// $99/report pricing
-const TAX_REPORT_PRICE = 99;
-const TAX_REPORT_PRODUCT = {
-  name: 'Automated Crypto Tax Report (Form 8949)',
-  price: TAX_REPORT_PRICE,
-  currency: 'USD',
-  description: 'Automated crypto tax report with exchange integration and IRS Form 8949 PDF',
-};
-
-// === TAX REPORT PAYMENT (IRS Form 8949) ===
-// Create payment session for tax report
-router.post('/tax-report/create-session', async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: 'Authentication required' });
-    }
-    const { paymentMethod } = req.body;
-    let session;
-    if (paymentMethod === 'fiat') {
-      session = await stripeClient.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [{
-          price_data: {
-            currency: TAX_REPORT_PRODUCT.currency.toLowerCase(),
-            product_data: {
-              name: TAX_REPORT_PRODUCT.name,
-              description: TAX_REPORT_PRODUCT.description,
-            },
-            unit_amount: TAX_REPORT_PRODUCT.price * 100,
-          },
-          quantity: 1,
-        }],
-        mode: 'payment',
-        success_url: `${process.env.FRONTEND_URL}/tax-report/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL}/tax-report/cancel`,
-        customer_email: req.user.email,
-        metadata: {
-          user_id: req.user.id,
-          product: 'tax_report',
-        },
-      });
-    }
-    await DatabaseService.logAuditEvent(
-      req.user.id,
-      'tax_report_payment_session_created',
-      'payment',
-      null,
-      null,
-      {
-        paymentMethod,
-        sessionId: session?.id,
-        amount: TAX_REPORT_PRODUCT.price,
-        currency: TAX_REPORT_PRODUCT.currency,
-      }
-    );
-    res.json({
-      success: true,
-      data: {
-        sessionId: session?.id,
-        url: session?.url,
-        product: TAX_REPORT_PRODUCT,
-        wallets: paymentMethod === 'crypto' ? getPaymentWallets() : null,
-      },
-      message: 'Tax report payment session created',
-    });
-    return;
-  } catch (error: any) {
-    logger.error('Create tax report payment session error:', error);
-    res.status(400).json({ success: false, error: error.message || 'Failed to create tax report payment session' });
-    return;
-  }
-});
-
-// Stripe webhook for tax report
-router.post('/tax-report/webhook', async (req: Request, res: Response) => {
-  try {
-    const sig = req.headers['stripe-signature'];
-    if (!sig || !STRIPE_WEBHOOK_SECRET) {
-      res.status(400).json({ error: 'Webhook signature verification failed' });
-      return;
-    }
-    const body = JSON.stringify(req.body);
-    const event = stripeClient.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET);
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as any;
-      const userId = session.metadata?.user_id;
-      if (userId && session.metadata?.product === 'tax_report') {
-        await DatabaseService.logAuditEvent(
-          userId,
-          'tax_report_payment_completed',
-          'payment',
-          null,
-          null,
-          {
-            amount: session.amount_total / 100,
-            currency: session.currency?.toUpperCase(),
-            paymentMethod: 'stripe',
-            sessionId: session.id,
-            product: 'tax_report',
-          }
-        );
-        // Mark user as eligible to generate/download tax report
-        await DatabaseService.updateUser(userId, { tax_report_paid: true, tax_report_paid_at: new Date() });
-      }
-    }
-    res.json({ received: true });
-    return;
-  } catch (error: any) {
-    logger.error('Tax report webhook error:', error);
-    res.status(400).json({ error: `Webhook Error: ${error.message}` });
-    return;
-  }
-});
-
-// Generate and download IRS Form 8949 PDF (requires payment)
-router.post('/tax-report/generate', async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ success: false, error: 'Authentication required' });
-      return;
-    }
-    // Check payment status
-    const user = await DatabaseService.getUserById(req.user.id);
-    if (!user?.tax_report_paid) {
-      res.status(402).json({ success: false, error: 'Payment required for tax report' });
-      return;
-    }
-    // Fetch transactions and calculate gains/losses
-    const txs = await getAllUserTransactions(user);
-    const gainsLosses = calculateGainsLosses(txs);
-    // Generate PDF
-    const pdfPath = await generateForm8949PDF(gainsLosses, req.user.id);
-    // Optionally, reset tax_report_paid so user must pay again for next report
-    await DatabaseService.updateUser(req.user.id, { tax_report_paid: false });
-    // Send PDF file
-    res.download(pdfPath, `IRS_Form_8949_${new Date().getFullYear()}.pdf`);
-    return;
-  } catch (error: any) {
-    logger.error('Generate tax report error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to generate tax report' });
-    return;
-  }
-});
 import { Router, Request, Response } from 'express';
 import { AuthenticatedRequest, ApiResponse } from '@/types';
 import stripe from 'stripe';
 import DatabaseService from '@/services/database';
+import { Logger } from '@/utils/logger';
 
 const router = Router();
 const logger = new Logger('payments');
@@ -248,7 +102,7 @@ router.get('/crypto', async (req: Request, res: Response): Promise<void> => {
   try {
     res.json({
       success: true,
-      data: SUPPORTED_CRYPTO,
+      data: getSupportedCrypto(),
       message: 'Supported cryptocurrencies retrieved successfully',
     } as ApiResponse);
   } catch (error: any) {

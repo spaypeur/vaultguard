@@ -305,7 +305,7 @@ export class ReferralService extends BaseService<any> {
           referralCount: user.referralCount,
           totalRewards: user.totalRewards,
           rank: index + 1,
-          badges: [], // Would be populated from badge service
+          badges: [] as ReferralBadge[], // Would be populated from badge service
           period,
         }));
     } catch (error) {
@@ -386,10 +386,18 @@ export class ReferralService extends BaseService<any> {
       if (!affiliate) return;
 
       // Log click (you might want to store this in a separate clicks table)
-      await DatabaseService.query(
-        'UPDATE affiliate_programs SET performance = performance::jsonb || $1 WHERE id = $2',
-        [JSON.stringify({ clicks: affiliate.performance.clicks + 1 }), affiliate.id]
-      );
+      const { error } = await supabase
+        .from('affiliate_programs')
+        .update({
+          performance: {
+            ...affiliate.performance,
+            clicks: affiliate.performance.clicks + 1
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', affiliate.id);
+
+      if (error) throw error;
     } catch (error) {
       this.logger.error('Error tracking affiliate click:', error);
     }
@@ -397,19 +405,26 @@ export class ReferralService extends BaseService<any> {
 
   // Private helper methods
   private async findReferralByCode(referralCode: string): Promise<Referral | null> {
-    const result = await DatabaseService.query(
-      'SELECT * FROM referrals WHERE referral_code = $1',
-      [referralCode]
-    );
-    return result.rows[0] || null;
+    const { data, error } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referral_code', referralCode)
+      .single();
+
+    if (error) return null;
+    return data as Referral;
   }
 
   private async findAffiliateByCode(affiliateCode: string): Promise<AffiliateProgram | null> {
-    const result = await DatabaseService.query(
-      'SELECT * FROM affiliate_programs WHERE affiliate_code = $1 AND status = $2',
-      [affiliateCode, AffiliateStatus.ACTIVE]
-    );
-    return result.rows[0] || null;
+    const { data, error } = await supabase
+      .from('affiliate_programs')
+      .select('*')
+      .eq('affiliate_code', affiliateCode)
+      .eq('status', AffiliateStatus.ACTIVE)
+      .single();
+
+    if (error) return null;
+    return data as AffiliateProgram;
   }
 
   private getReferrerReward(type: ReferralType): number {

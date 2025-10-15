@@ -30,33 +30,36 @@ const validateLeadMagnetCapture = [
 ];
 
 // GET /api/lead-magnets/captures - Get all lead captures (admin only)
-router.get('/captures', async (req: Request, res: Response) => {
+router.get('/captures', async (req: Request, res: Response): Promise<void> => {
   try {
     res.json({
       success: true,
       data: leadCaptures,
       total: leadCaptures.length
     });
+    return;
   } catch (error) {
     logger.error('Error fetching lead captures:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
     });
+    return;
   }
 });
 
 // POST /api/lead-magnets/capture - Capture lead magnet email
-router.post('/capture', validateLeadMagnetCapture, async (req: Request, res: Response) => {
+router.post('/capture', validateLeadMagnetCapture, async (req: Request, res: Response): Promise<void> => {
   try {
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Validation failed',
         details: errors.array()
       });
+      return;
     }
 
     const { email, leadMagnet } = req.body;
@@ -69,10 +72,11 @@ router.post('/capture', validateLeadMagnetCapture, async (req: Request, res: Res
     );
 
     if (existingCapture) {
-      return res.status(409).json({
+      res.status(409).json({
         success: false,
         error: 'Email already captured for this lead magnet'
       });
+      return;
     }
 
     // Create new capture record

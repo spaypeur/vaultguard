@@ -1,12 +1,12 @@
 import { Logger } from '../utils/logger';
 import { SubscriptionManager } from './subscriptionManager';
 import { DatabaseService } from './database';
-import { CronJob } from 'cron';
+import * as cron from 'node-cron';
 
 export class RenewalScheduler {
   private logger = new Logger('RenewalScheduler');
   private subscriptionManager: SubscriptionManager;
-  private renewalJob: CronJob | null = null;
+  private renewalJob: cron.ScheduledTask | null = null;
   private isRunning = false;
 
   constructor() {
@@ -26,9 +26,12 @@ export class RenewalScheduler {
 
     try {
       // Run daily at 9:00 AM UTC
-      this.renewalJob = new CronJob('0 9 * * *', async () => {
+      this.renewalJob = cron.schedule('0 9 * * *', async () => {
         await this.processDailyRenewals();
-      }, null, true, 'UTC');
+      }, {
+        scheduled: false,
+        timezone: 'UTC'
+      });
 
       this.renewalJob.start();
       this.isRunning = true;
@@ -154,7 +157,8 @@ export class RenewalScheduler {
   } {
     return {
       isRunning: this.isRunning,
-      nextRun: this.renewalJob?.nextDate().toDate(),
+      // Note: node-cron doesn't provide next run time in the same way
+      // This would need to be implemented differently if needed
     };
   }
 

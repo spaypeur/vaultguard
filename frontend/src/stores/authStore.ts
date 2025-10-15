@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '../services/api';
 
 interface User {
   id: string;
@@ -37,32 +38,26 @@ export const useAuthStore = create<AuthState>()(
       login: async (code: string) => {
         set({ isLoading: true });
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || '/api';
-          const response = await fetch(`${apiUrl}/auth/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Origin': window.location.origin,
-            },
-            body: JSON.stringify({ code }),
-            credentials: 'include',
-          });
+          const { data } = await api.post('/auth/login', { code });
 
-          if (!response.ok) {
-            throw new Error('Invalid credentials');
+          if (data.success) {
+            set({
+              user: data.data.user,
+              accessToken: data.data.accessToken,
+              refreshToken: data.data.refreshToken,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            throw new Error(data.message || 'Login failed');
           }
-
-          const data = await response.json();
-          set({
-            user: data.user,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } catch (error) {
+        } catch (error: any) {
           set({ isLoading: false });
-          throw error;
+          const errorMessage = error.response?.data?.message ||
+                              error.response?.data?.error ||
+                              error.message ||
+                              'Login failed';
+          throw new Error(errorMessage);
         }
       },
 
