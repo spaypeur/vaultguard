@@ -30,6 +30,16 @@ interface AssetExposure {
     value: BigNumber;
     protocol: string;
     chain: string;
+    // Additional properties for risk analysis
+    has_audit?: boolean;
+    audit_score?: number;
+    liquidity?: number;
+    volume_24h?: number;
+    has_withdrawal_limits?: boolean;
+    daily_withdrawal_limit?: number;
+    is_compliant?: boolean;
+    jurisdiction?: string;
+    is_regulated?: boolean;
 }
 
 export class PortfolioThreatIntel {
