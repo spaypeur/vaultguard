@@ -84,7 +84,7 @@ export default function Register() {
         }));
 
         toast.success('Welcome to VaultGuard! Initializing your security dashboard...');
-        navigate('/scan');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Registration failed');

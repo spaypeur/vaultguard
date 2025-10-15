@@ -29,7 +29,7 @@ export default function Login() {
         setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
 
         toast.success('Login successful!');
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Login failed');
