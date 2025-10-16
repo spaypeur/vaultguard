@@ -126,10 +126,8 @@ template ${this.normalizeCircuitName(circuit.name)}() {
         return `
     // Check if ${fieldName} is in set {${setValues}}
     signal ${fieldName}_matches[${constraint.value.length}];
-    for (var i = 0; i < ${constraint.value.length}; i++) {
-        ${fieldName}_matches[i] <== IsEqual()([${fieldName}, ${constraint.value[i]}]);
-    }
-    ${fieldName}_in_set <== OR(${constraint.value.length})(${fieldName}_matches);\n`;
+    ${constraint.value.map((v: any, i: number) => `${fieldName}_matches[${i}] <== IsEqual()([${fieldName}, ${v}]);`).join('\n    ')}
+    ${fieldName}_in_set <== OR(${constraint.value.length})(${constraint.value.map((_: any, i: number) => `${fieldName}_matches[${i}]`).join(', ')});\n`;
       
       default:
         return '';

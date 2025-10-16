@@ -1,5 +1,4 @@
 import { SocksProxyAgent } from 'socks-proxy-agent';
-import { createSocksProxyAgent } from 'socks-proxy-agent';
 import { Logger } from './logger';
 
 class TorManager {
@@ -22,8 +21,8 @@ class TorManager {
     }
 
     private setupAgents(): void {
-        this.httpAgent = createSocksProxyAgent(this.TOR_PROXY);
-        this.httpsAgent = createSocksProxyAgent(this.TOR_PROXY);
+        this.httpAgent = new SocksProxyAgent(this.TOR_PROXY);
+        this.httpsAgent = new SocksProxyAgent(this.TOR_PROXY);
     }
 
     public async initialize(): Promise<void> {

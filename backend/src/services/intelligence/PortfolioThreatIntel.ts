@@ -279,11 +279,11 @@ export class PortfolioThreatIntel {
 
     private calculateConcentrationScore(exposures: AssetExposure[]): number {
         if (!exposures || exposures.length === 0) return 0;
-        
-        const totalValue = exposures.reduce((sum, e) => sum + (e.value || 0), 0);
-        if (totalValue === 0) return 0;
-        
-        const concentrations = exposures.map(e => (e.value || 0) / totalValue);
+
+        const totalValue = exposures.reduce((sum, e) => sum.plus(e.value || new BigNumber(0)), new BigNumber(0));
+        if (totalValue.isZero()) return 0;
+
+        const concentrations = exposures.map(e => (e.value || new BigNumber(0)).div(totalValue).toNumber());
         const herfindahlIndex = concentrations.reduce((sum, c) => sum + c * c, 0);
         
         return Math.min(herfindahlIndex * 1.5, 1.0);
@@ -383,7 +383,7 @@ export class PortfolioThreatIntel {
             
             let risk = 0;
             if (hasLimits) risk += 0.3;
-            if (value > dailyLimit) risk += 0.5;
+            if (value && dailyLimit && value.toNumber() > dailyLimit) risk += 0.5;
             
             totalRisk += Math.min(risk, 1.0);
             count++;

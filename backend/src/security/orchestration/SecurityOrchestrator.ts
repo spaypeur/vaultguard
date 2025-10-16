@@ -160,9 +160,7 @@ export class SecurityOrchestrator {
 
   private setupEventListeners(): void {
     // Listen for blockchain events
-    this.chainMonitor.subscribe('*', async (blockData) => {
-      await this.analyzeCrossChainActivity(blockData);
-    });
+    this.chainMonitor.subscribe();
 
     // Setup other event listeners
     process.on('uncaughtException', async (error) => {
@@ -178,7 +176,7 @@ export class SecurityOrchestrator {
   }
 
   private async analyzeCrossChainActivity(blockData: any): Promise<void> {
-    const suspiciousTransactions = blockData.transactions.filter(tx =>
+    const suspiciousTransactions = blockData.transactions.filter((tx: any) =>
       this.isTransactionSuspicious(tx)
     );
 
@@ -242,9 +240,9 @@ export class SecurityOrchestrator {
     return suspiciousIndicators.length >= 2;
   }
 
-  private isUnusualAmount(amount: number): boolean {
+  private async isUnusualAmount(amount: number): Promise<boolean> {
     // Check against historical transaction patterns
-    const historicalAverage = this.getHistoricalAverage();
+    const historicalAverage = await this.getHistoricalAverage();
     const threshold = historicalAverage * 10; // 10x above average
     return amount > threshold;
   }
@@ -268,9 +266,9 @@ export class SecurityOrchestrator {
     );
   }
 
-  private detectRapidTransactions(tx: any): boolean {
+  private async detectRapidTransactions(tx: any): Promise<boolean> {
     // Check for multiple transactions within short timeframes
-    const recentTransactions = this.getRecentTransactions(tx.from, 300); // 5 minutes
+    const recentTransactions = await this.getRecentTransactions(tx.from, 300); // 5 minutes
     return recentTransactions.length > 5;
   }
 
@@ -299,9 +297,9 @@ export class SecurityOrchestrator {
     return hour < 6 || hour > 22; // Outside normal business hours
   }
 
-  private detectGasManipulation(tx: any): boolean {
+  private async detectGasManipulation(tx: any): Promise<boolean> {
     // Check for gas price manipulation
-    const normalGasPrice = this.getNormalGasPrice();
+    const normalGasPrice = await this.getNormalGasPrice();
     return tx.gasPrice > normalGasPrice * 2;
   }
 
@@ -402,7 +400,7 @@ export class SecurityOrchestrator {
 
   private getEventValue(event: SecurityEvent, field: string): any {
     const paths = field.split('.');
-    let value = event;
+    let value: any = event;
     for (const path of paths) {
       value = value[path];
       if (value === undefined) break;

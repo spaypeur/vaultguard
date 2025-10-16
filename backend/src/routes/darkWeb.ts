@@ -15,7 +15,7 @@ router.post('/scan',
     authenticateToken,
     rateLimiter,
     validateRequest,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response): Promise<void> => {
         try {
             const { assets, scanType } = req.body;
 
@@ -28,7 +28,9 @@ router.post('/scan',
 
             res.status(200).json({ message: 'Scan initiated successfully' });
         } catch (error) {
+            // Ensure all code paths return a value
             res.status(500).json({ error: 'Failed to initiate scan' });
+            return;
         }
     }
 );
@@ -40,9 +42,9 @@ router.post('/scan',
 router.get('/alerts',
     authenticateToken,
     rateLimiter,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response): Promise<void> => {
         try {
-            const { 
+            const {
                 severity,
                 status,
                 source,
@@ -53,7 +55,7 @@ router.get('/alerts',
             } = req.query;
 
             const query: any = {};
-            
+
             if (severity) query.severity = severity;
             if (status) query.status = status;
             if (source) query.source = source;
@@ -81,6 +83,7 @@ router.get('/alerts',
             });
         } catch (error) {
             res.status(500).json({ error: 'Failed to fetch alerts' });
+            return;
         }
     }
 );
@@ -92,15 +95,17 @@ router.get('/alerts',
 router.get('/alerts/:id',
     authenticateToken,
     rateLimiter,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response): Promise<void> => {
         try {
             const alert = await darkWebMonitor.getAlertById(req.params.id);
             if (!alert) {
-                return res.status(404).json({ error: 'Alert not found' });
+                res.status(404).json({ error: 'Alert not found' });
+                return;
             }
             res.status(200).json(alert);
         } catch (error) {
             res.status(500).json({ error: 'Failed to fetch alert' });
+            return;
         }
     }
 );
@@ -113,13 +118,14 @@ router.patch('/alerts/:id',
     authenticateToken,
     rateLimiter,
     validateRequest,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response): Promise<void> => {
         try {
             const { status, notes, assignedTo } = req.body;
             // For now, just return success without actual update
             res.status(200).json({ message: 'Alert update not implemented yet' });
         } catch (error) {
             res.status(500).json({ error: 'Failed to update alert' });
+            return;
         }
     }
 );
@@ -131,13 +137,14 @@ router.patch('/alerts/:id',
 router.get('/statistics',
     authenticateToken,
     rateLimiter,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response): Promise<void> => {
         try {
             const { fromDate, toDate } = req.query;
             const stats = await darkWebMonitor.getStatistics();
             res.status(200).json(stats);
         } catch (error) {
             res.status(500).json({ error: 'Failed to fetch statistics' });
+            return;
         }
     }
 );
@@ -150,13 +157,14 @@ router.post('/verify/:id',
     authenticateToken,
     rateLimiter,
     validateRequest,
-    async (req: Request, res: Response) => {
+    async (req: Request, res: Response): Promise<void> => {
         try {
             const { verification } = req.body;
             const result = await darkWebMonitor.verifyAlert(req.params.id);
             res.status(200).json({ verified: result });
         } catch (error) {
             res.status(500).json({ error: 'Failed to verify alert' });
+            return;
         }
     }
 );

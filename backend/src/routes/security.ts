@@ -40,7 +40,7 @@ router.post(
     '/scan',
     authMiddleware,
     rateLimiter,
-    async (req, res) => {
+    async (req, res): Promise<void> => {
         try {
             const { address, chainId, name, scanType, rescanInterval, alerts } = req.body;
             const userId = req.user!.id;
@@ -53,9 +53,10 @@ router.post(
             });
 
             if (existingScan) {
-                return res.status(409).json({
+                res.status(409).json({
                     error: 'A scan already exists for this contract'
                 });
+                return;
             }
 
             // Create scan record
@@ -87,6 +88,7 @@ router.post(
             res.status(500).json({
                 error: 'Failed to queue contract scan'
             });
+            return;
         }
     }
 );
@@ -95,7 +97,7 @@ router.get(
     '/scans',
     authMiddleware,
     validateRequest(listScansSchema),
-    async (req, res) => {
+    async (req, res): Promise<void> => {
         try {
             const { page, limit, status, sortBy, sortOrder } = req.query;
             const userId = req.user!.id;
@@ -121,12 +123,12 @@ router.get(
                     pages: Math.ceil(total / limitNum)
                 }
             });
-            return;
         } catch (error) {
             logger.error('Error listing contract scans:', error);
             res.status(500).json({
                 error: 'Failed to list contract scans'
             });
+            return;
         }
     }
 );
@@ -134,7 +136,7 @@ router.get(
 router.get(
     '/scans/:id',
     authMiddleware,
-    async (req, res) => {
+    async (req, res): Promise<void> => {
         try {
             const scan = await ContractScan.findOne({
                 _id: req.params.id,
@@ -142,18 +144,19 @@ router.get(
             });
 
             if (!scan) {
-                return res.status(404).json({
+                res.status(404).json({
                     error: 'Contract scan not found'
                 });
+                return;
             }
 
             res.json(scan);
-            return;
         } catch (error) {
             logger.error('Error fetching contract scan:', error);
             res.status(500).json({
                 error: 'Failed to fetch contract scan'
             });
+            return;
         }
     }
 );
@@ -161,7 +164,7 @@ router.get(
 router.delete(
     '/scans/:id',
     authMiddleware,
-    async (req, res) => {
+    async (req, res): Promise<void> => {
         try {
             const scan = await ContractScan.findOneAndDelete({
                 _id: req.params.id,
@@ -169,20 +172,21 @@ router.delete(
             });
 
             if (!scan) {
-                return res.status(404).json({
+                res.status(404).json({
                     error: 'Contract scan not found'
                 });
+                return;
             }
 
             res.json({
                 message: 'Contract scan deleted successfully'
             });
-            return;
         } catch (error) {
             logger.error('Error deleting contract scan:', error);
             res.status(500).json({
                 error: 'Failed to delete contract scan'
             });
+            return;
         }
     }
 );
