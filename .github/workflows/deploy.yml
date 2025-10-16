@@ -19,6 +19,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+
       - name: Install frontend dependencies
         run: cd frontend && npm ci
 
@@ -46,6 +49,9 @@ jobs:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
+
+      - name: Clear npm cache
+        run: npm cache clean --force
 
       - name: Install backend dependencies
         run: cd backend && npm ci
@@ -85,10 +91,18 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+
       - name: Install dependencies
         run: |
           cd backend && npm ci
           cd ../frontend && npm ci
+
+      - name: Clear TypeScript and Jest cache
+        run: |
+          cd backend && rm -f tsconfig.tsbuildinfo && npx jest --clearCache || true
+          cd ../frontend && rm -f tsconfig.tsbuildinfo && npx jest --clearCache || true
 
       - name: Run backend tests
         run: cd backend && npm test
