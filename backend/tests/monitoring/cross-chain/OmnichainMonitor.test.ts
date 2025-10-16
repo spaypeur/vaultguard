@@ -1,5 +1,4 @@
 import { OmnichainMonitor } from '../../../src/monitoring/cross-chain/OmnichainMonitor';
-import '@types/jest';
 
 describe('OmnichainMonitor', () => {
   let monitor: OmnichainMonitor;

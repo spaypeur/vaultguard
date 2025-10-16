@@ -4,7 +4,6 @@ import {
   ComplianceOperation,
   ComplianceProof,
 } from '../../../src/security/zk-compliance/types';
-import '@types/jest';
 
 describe('ZKCompliance', () => {
   let zkCompliance: ZKCompliance;

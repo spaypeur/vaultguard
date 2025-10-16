@@ -1,6 +1,5 @@
 import { PredictiveSecurity } from '../../../src/security/predictive/PredictiveSecurity';
 import { ThreatIndicator, ThreatType, ThreatSeverity } from '../../../src/security/predictive/types';
-import '@types/jest';
 
 describe('PredictiveSecurity', () => {
   let predictiveSecurity: PredictiveSecurity;

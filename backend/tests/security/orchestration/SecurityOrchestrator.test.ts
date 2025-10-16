@@ -7,7 +7,6 @@ import {
   ConditionOperator,
 } from '../../../src/security/orchestration/types';
 import { ThreatSeverity } from '../../../src/security/predictive/types';
-import '@types/jest';
 
 describe('SecurityOrchestrator', () => {
   let orchestrator: SecurityOrchestrator;

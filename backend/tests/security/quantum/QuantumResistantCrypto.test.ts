@@ -1,5 +1,4 @@
 import { QuantumResistantCrypto } from '../../../src/security/quantum/QuantumResistantCrypto';
-import '@types/jest';
 import { Buffer } from 'buffer';
 
 describe('QuantumResistantCrypto', () => {
