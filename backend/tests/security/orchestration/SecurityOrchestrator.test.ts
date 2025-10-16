@@ -5,11 +5,9 @@ import {
   DefensePolicy,
   DefenseActionType,
   ConditionOperator,
-  ThreatSeverity,
 } from '../../../src/security/orchestration/types';
+import { ThreatSeverity } from '../../../src/security/predictive/types';
 import '@types/jest';
-
-jest.mock('ioredis');
 
 describe('SecurityOrchestrator', () => {
   let orchestrator: SecurityOrchestrator;
@@ -55,7 +53,7 @@ describe('SecurityOrchestrator', () => {
     });
 
     it('should reject invalid policies', async () => {
-      const invalidPolicy = { ...testPolicy, actions: [] };
+      const invalidPolicy: DefensePolicy = { ...testPolicy, actions: [] };
       await expect(orchestrator.addPolicy(invalidPolicy)).rejects.toThrow();
     });
   });
