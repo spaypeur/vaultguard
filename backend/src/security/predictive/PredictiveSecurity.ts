@@ -45,13 +45,19 @@ export class PredictiveSecurity {
    * @returns Prediction result with confidence scores
    */
   public async preemptAttacks(): Promise<PredictionResult> {
+    console.log('DEBUG: preemptAttacks called, recentThreats length:', this.recentThreats.length);
     if (this.recentThreats.length === 0) {
+      console.log('DEBUG: No recent threats, returning empty prediction');
       return this.emptyPredictionResult();
     }
 
     const currentState = this.recentThreats[this.recentThreats.length - 1];
     const predictions = this.markovModel.predict(currentState, 5);
     const patterns = this.markovModel.identifyPatterns(0.1, 5);
+
+    console.log('DEBUG: Current state:', currentState);
+    console.log('DEBUG: Markov predictions:', predictions);
+    console.log('DEBUG: Identified patterns:', patterns);
 
     const predictedThreats: ThreatPrediction[] = predictions.map(
       (pred, index) => {

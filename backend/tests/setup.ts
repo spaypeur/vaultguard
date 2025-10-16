@@ -1,3 +1,9 @@
+import { webcrypto } from 'crypto';
+
+// Polyfill crypto for tests
+Object.defineProperty(global, 'crypto', {
+  value: webcrypto,
+});
 // Jest setup file
 import dotenv from 'dotenv';
 

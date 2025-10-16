@@ -60,10 +60,14 @@ export class MarkovChainModel {
     currentState: ThreatIndicator,
     numPredictions: number = 3
   ): Array<{ nextState: string; probability: number }> {
+    console.log('DEBUG: MarkovChainModel.predict called with currentState:', currentState);
     const stateKey = this.getStateKey(currentState);
+    console.log('DEBUG: Generated stateKey:', stateKey);
     const transitions = this.transitionMatrix.get(stateKey);
+    console.log('DEBUG: Transitions for stateKey:', transitions);
 
     if (!transitions) {
+      console.log('DEBUG: No transitions found for stateKey, returning empty array');
       return [];
     }
 
@@ -146,6 +150,9 @@ export class MarkovChainModel {
   }
 
   private parseStateKey(key: string): ThreatIndicator {
+    console.log('DEBUG: parseStateKey called with key:', key);
+    console.log('DEBUG: typeof crypto:', typeof crypto);
+    console.log('DEBUG: crypto.randomUUID available:', typeof crypto?.randomUUID);
     const [type, severity, source] = key.split('|');
     return {
       id: crypto.randomUUID(),
