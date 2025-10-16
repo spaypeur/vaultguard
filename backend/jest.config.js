@@ -4,7 +4,7 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', { useESM: true }],
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -18,9 +18,4 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
 };
