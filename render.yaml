@@ -2,8 +2,8 @@ services:
   - type: web
     name: vaultguard-backend
     runtime: node
-    buildCommand: npm run build
-    startCommand: npm run start:production
+    buildCommand: cd backend && npm run build
+    startCommand: cd backend && npm run start:production
     envVars:
       - key: NODE_ENV
         value: production
